@@ -1,27 +1,26 @@
-import { signInWithPopup, signOut, GoogleAuthProvider } from "firebase/auth";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "../firebase"
-import { useNavigate,useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
-export default function Login(){
+export default function Login() {
     const nav = useNavigate();
     const location = useLocation();
     const from = location.state?.from || "/dashboard";
+
     const handleLogin = async () => {
-        try{
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-        nav(from);
-        }catch(error){
-            console.log(error);
+        try {
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+            await signInWithPopup(auth, provider);
+            nav(from);
+        } catch(error) {
+            console.log(error.code, error.message);
         }
-        
     }
 
-    
-    return(
+    return (
         <div>
-                <button onClick= {handleLogin} >Sign in with Google</button>
-
+            <button onClick={handleLogin}>Sign in with Google</button>
         </div>
     )
 }
