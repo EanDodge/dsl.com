@@ -1,5 +1,22 @@
 {
   "projects": {
     "default": "dodgesportsleague-bf498"
-  }
+  },
+  "targets": {
+    "your-project-id": {
+      "hosting": {
+        "main": [
+          "dodgesportsleague"
+        ]
+      }
+    },
+    "dodgesportsleague-bf498": {
+      "hosting": {
+        "main": [
+          "dodgesportsleague"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

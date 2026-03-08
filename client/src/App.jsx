@@ -9,7 +9,21 @@ import CommishRoute from "./components/CommishRoute"
 import CreatePost from "./pages/CreatePost"
 import EditPost from "./pages/EditPost"
 import GetPost from "./pages/GetPost"
+import { useAuth } from "./context/AuthContext"
+import { apiGet, apiPost } from "./api"
 export default function App() {
+  const {currentUser} = useAuth();
+  const handleclick = async () =>
+  {
+    const token = await currentUser.getIdToken();
+    const result = await apiGet("/health", token);
+    console.log(result);
+  }
+  const handleTest = async () => {
+    const token = await currentUser.getIdToken();
+    const result = await apiPost("/api/leagues", {}, token);
+    console.log(result);
+}
   return (
     <>
       <Navbar />
@@ -17,7 +31,9 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={
           <ProtectedRoute>
-            <h1>Dashboard — coming soon</h1>
+            <h1>Dashboard — coming soon</h1> 
+            <button onClick = {handleclick}>Click Me</button>     
+            <button onClick = {handleTest}>API Call</button>      
             <Link to="/profile">Account</Link>
           </ProtectedRoute>
         } />

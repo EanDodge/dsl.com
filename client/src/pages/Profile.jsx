@@ -27,8 +27,10 @@ export default function Profile(){
     const handleSave = async() => {
         const {displayName,bio} = formData;
         await updateDoc(doc(db, "users", currentUser.uid),{displayName,bio} );   
+        
     }
     if (!profileData) return <h1>Loading...</h1>
+    
     return(
         <div>
             <div>
@@ -43,7 +45,7 @@ export default function Profile(){
             </div>
             <div>
             <h2>Bio</h2>
-            <input 
+            <textarea 
                 name="bio"
                 value={formData.bio}
                 onChange={handleChange}
