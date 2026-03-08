@@ -12,8 +12,14 @@ export default function Login() {
             const provider = new GoogleAuthProvider();
             provider.setCustomParameters({ prompt: 'select_account' });
             await signInWithPopup(auth, provider);
-            nav(from);
-        } catch(error) {
+            const pendingCode = sessionStorage.getItem("pendingInviteCode");
+            if (pendingCode) {
+                sessionStorage.removeItem("pendingInviteCode");
+                nav(`/league/join?code=${pendingCode}`);
+            } else {
+                nav(from);
+            }
+        } catch (error) {
             console.log(error.code, error.message);
         }
     }

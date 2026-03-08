@@ -9,15 +9,15 @@ export default function CreateLeague() {
     const [formData, setFormData] = useState({ name: "", sport: "", location: { city: "", state: "" } });
     const [inviteCode, setInviteCode] = useState(null);
     const handleCreateLeague = async () => {
-        try{
-        const token = await currentUser.getIdToken();
-        const result = await apiPost("/api/leagues", formData, token);
-        console.log(result);
-        setInviteCode(result.inviteCode);
-        nav(`/league/${result.leagueId}`)
-        }catch(error) {
-        console.log(error);
-    }
+        try {
+            const token = await currentUser.getIdToken();
+            const result = await apiPost("/api/leagues", formData, token);
+            console.log(result);
+            setInviteCode(result.inviteCode);
+            nav(`/league/${result.leagueId}`)
+        } catch (error) {
+            console.log(error);
+        }
     }
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -46,10 +46,10 @@ export default function CreateLeague() {
             <h3>What Sport are you playing?</h3>
             <label>
                 Choose an option:
-                <select name = "sport"
-                        placeholder = "Choose one"
-                        value={formData.sport} 
-                        onChange={handleChange}>
+                <select name="sport"
+                    placeholder="Choose one"
+                    value={formData.sport}
+                    onChange={handleChange}>
                     <option value="" disabled hidden>Choose a Sport</option>
                     <option value="football">Football</option>
                     <option value="baseball">Baseball</option>
@@ -75,7 +75,7 @@ export default function CreateLeague() {
             />
 
             {allFilled && <button onClick={handleCreateLeague}>Create</button>}
-            
+
         </div>
     )
 }
