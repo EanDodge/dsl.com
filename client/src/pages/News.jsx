@@ -25,7 +25,7 @@ export default function News() {
                     <h2>{post.title}</h2>
                     <h3>{post.authorName}</h3>
                     <h3>{post.publishedAt?.toDate().toLocaleDateString()}</h3>
-                    {userProfile?.role === "Commissioner" &&
+                    {userProfile?.role === "Manager" &&
                         <Link to={`/news/edit/${post.id}`}>Edit</Link>
                     }
                     <Link to={`/news/post/${post.id}`}>Show More</Link>

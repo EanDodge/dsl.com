@@ -21,8 +21,9 @@ export default function Navbar() {
             <Link to="/news">News</Link>
             {currentUser && <Link to="/dashboard">Dashboard</Link>}
             {currentUser && <Link to="/profile">Profile</Link>}
+            {currentUser && <Link to="/league/create">CreateLeague</Link>}
             {currentUser ? <button onClick={handleSignOut}>Sign Out</button> : <Link to="/login">Sign In</Link>}
-            {userProfile?.role === "Commissioner" && <Link to="/news/create">Create Post</Link>}
+            {userProfile?.role === "Manager" && <Link to="/news/create">Create Post</Link>}
         </nav>
     )
 }

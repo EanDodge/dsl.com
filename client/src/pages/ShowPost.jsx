@@ -26,7 +26,7 @@ export default function ShowPost({ docID }) {
             <h3>{formData.publishedAt?.toDate().toLocaleDateString()}</h3>
             <p>{formData.body}</p>
 
-            {userProfile?.role === "Commissioner" &&
+            {userProfile?.role === "Manager" &&
                 <Link to={`/news/edit/${docID}`}>Edit</Link>
             }
         </div>
