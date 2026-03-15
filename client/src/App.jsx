@@ -11,6 +11,7 @@ import EditPost from "./pages/EditPost"
 import GetPost from "./pages/GetPost"
 import CreateLeague from "./pages/CreateLeague"
 import JoinLeague from "./pages/JoinLeague"
+import Dashboard from "./pages/Dashboard"
 import LeagueDashboard from "./pages/LeagueDashboard"
 import { useAuth } from "./context/AuthContext"
 import { apiGet, apiPost } from "./api"
@@ -46,12 +47,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={
           <ProtectedRoute>
-            <h1>Dashboard — coming soon</h1>
-            <button onClick={handleclick}>Click Me</button>
-            <button onClick={handleTest}>API Call</button>
-            {/* <button onClick = {handleTestLeague}>Make League</button>    */}
-            <Link to="/league/create">Create Your Own League</Link>
-            <Link to="/league/join">Join a League</Link>
+            <Dashboard />
+            
           </ProtectedRoute>
         } />
         <Route path="/profile" element={
