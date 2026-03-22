@@ -51,11 +51,11 @@ export default function CreateLeague() {
                     value={formData.sport}
                     onChange={handleChange}>
                     <option value="" disabled hidden>Choose a Sport</option>
-                    <option value="football">Football</option>
-                    <option value="baseball">Baseball</option>
-                    <option value="basketball">Basketball</option>
-                    <option value="soccer">Soccer</option>
-                    <option value="other">Other</option>
+                    <option value="Football">Football</option>
+                    <option value="Baseball">Baseball</option>
+                    <option value="Basketball">Basketball</option>
+                    <option value="Soccer">Soccer</option>
+                    <option value="Sports">Other</option>
                 </select>
             </label>
             <h3>Where is the league located?</h3>
