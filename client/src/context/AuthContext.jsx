@@ -30,6 +30,7 @@ export function AuthProvider({ children }) {
             const userSnap = await getDoc(doc(db, "users", user.uid));
             if (!userSnap.exists()) {
                 const newProfile = {
+                    uid: user.uid,
                     displayName: user.displayName,
                     email: user.email,
                     photoURL: user.photoURL,

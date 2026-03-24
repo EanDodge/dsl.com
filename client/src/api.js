@@ -18,3 +18,15 @@ export const apiPost = async (path, body, token) => {
     });
     return res.json();
 };
+
+export const apiPut = async (path, body, token) => {
+    const res = await fetch(`${BASE_URL}${path}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+    });
+    return res.json();
+};

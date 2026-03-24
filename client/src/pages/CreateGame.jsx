@@ -1,7 +1,11 @@
 import { useAuth } from "../context/AuthContext"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiPost } from "../api"
+import { doc, getDoc } from "firebase/firestore"
+import { db } from "../firebase"
+
+
 
 export default function CreateGame() {
     const { currentUser } = useAuth();
@@ -10,10 +14,22 @@ export default function CreateGame() {
     const [formData, setFormData] = useState({
         date: "",
         time: "",
-        location: { name: "", lat: "", lng: "" },
+        location: { name: "", embeddedMap: "" },
         numTeams: 2,
         positionSlots: { QB: 1, RB: 1, WR: 2, TE: 1, C: 1 }
     });
+    const [isCommissioner, setIsCommissioner] = useState(false);
+
+    useEffect(() => {
+        const checkCommissioner = async () => {
+            const snap = await getDoc(doc(db, "leagues", leagueId));
+            if (snap.exists()) {
+                setIsCommissioner(snap.data().commissionerId === currentUser.uid);
+            }
+        }
+        checkCommissioner();
+    }, []);
+
     const handleCreateGame = async () => {
         try {
             const token = await currentUser.getIdToken();
@@ -38,6 +54,7 @@ export default function CreateGame() {
         }
     }
     const allFilled = formData.date !== "" && formData.time !== "" && formData.location.name !== "" && formData.numTeams !== "" && formData.numTeams > 1
+    if (!isCommissioner) return <h1>Access Denied</h1>
     return (
 
 
@@ -62,20 +79,15 @@ export default function CreateGame() {
                 value={formData.location.name}
                 onChange={handleChange}
             />
-            <input
-                name="lat"
-                placeholder="latitude"
+            <textarea
+                name="embeddedMap"
                 data-group="location"
-                value={formData.location.lat}
+                placeholder="Paste Google Maps embed code here"
+                value={formData.location.embeddedMap}
                 onChange={handleChange}
+                rows="4"
             />
-            <input
-                name="lng"
-                placeholder="longitude"
-                data-group="location"
-                value={formData.location.lng}
-                onChange={handleChange}
-            />
+
             <h3>Team Information</h3>
             <h4>Number of Teams</h4>
             <input

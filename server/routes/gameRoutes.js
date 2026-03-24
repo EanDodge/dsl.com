@@ -11,18 +11,28 @@ router.post("/:leagueId/games", verifyToken, async (req, res) => {
         const { date, time, location, numTeams, positionSlots } = req.body;
         const uid = req.user.uid;
         const { leagueId } = req.params;
+        const leagueSnap = await db.collection("leagues").doc(leagueId).get();
+        if (!leagueSnap.exists) return res.status(404).json({ error: "Bad LeagueID" });
+
+        const isCommissioner = uid === leagueSnap.data().commissionerId;
+        if (!isCommissioner) return res.status(403).json({ error: "Not authorized" });
+
+        const memberUids = leagueSnap.data().memberUids;
+        const attendance = {};
+        memberUids.forEach(memberId => {
+            attendance[memberId] = "pending";
+        });
         const data = {
             date,
             time,
             location: {
                 name: location.name,
-                lat: location.lat,
-                lng: location.lng
+                embeddedMap: location.embeddedMap
             },
             numTeams,
             positionSlots,
             status: "Upcoming",
-            attendance: {},
+            attendance: attendance,
             teams: [],
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             commissionerId: uid

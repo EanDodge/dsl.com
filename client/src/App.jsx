@@ -13,6 +13,8 @@ import CreateLeague from "./pages/CreateLeague"
 import JoinLeague from "./pages/JoinLeague"
 import Dashboard from "./pages/Dashboard"
 import LeagueDashboard from "./pages/LeagueDashboard"
+import CreateGame from "./pages/CreateGame"
+import GamePage from "./pages/GamePage"
 import { useAuth } from "./context/AuthContext"
 import { apiGet, apiPost } from "./api"
 
@@ -48,7 +50,7 @@ export default function App() {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
-            
+
           </ProtectedRoute>
         } />
         <Route path="/profile" element={
@@ -81,8 +83,18 @@ export default function App() {
             <CreateLeague />
           </ProtectedRoute>
         } />
-        <Route path="/league/join" element={<JoinLeague /> } />
+        <Route path="/league/join" element={<JoinLeague />} />
         <Route path="/league/:leagueId" element={<LeagueDashboard />} />
+        <Route path="/league/:leagueId/games/create" element={
+          <ProtectedRoute>
+              <CreateGame />
+          </ProtectedRoute>
+        } />
+        <Route path="/league/:leagueId/games/:gameId" element={
+          <ProtectedRoute>
+            <GamePage />
+          </ProtectedRoute>
+        } />
       </Routes>
     </>
   )
