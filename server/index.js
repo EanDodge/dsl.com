@@ -12,7 +12,14 @@ import gameRoutes from "./routes/gameRoutes.js"
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: [
+        "https://dodgesportsleague.web.app",
+        "http://localhost:5173"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(helmet());
 app.use("/api/leagues", leagueRoutes);
 app.use("/api/leagues", gameRoutes);
