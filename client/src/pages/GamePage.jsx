@@ -1,11 +1,10 @@
 import { doc, getDoc, onSnapshot } from "firebase/firestore"
 import { db } from "../firebase"
-import { useParams } from "react-router-dom"
+import { useParams, Link } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { useState, useEffect } from "react"
 import { apiPut, apiPost } from "../api"
 import { GameMap } from "../components/GoogleMap"
-
 export default function GamePage() {
     const { leagueId, gameId } = useParams();
     const { currentUser, loading } = useAuth();
@@ -19,7 +18,7 @@ export default function GamePage() {
             if (userSnap.exists()) {
                 const memberDocs = await Promise.all(
                     userSnap.data().memberUids.map(uid =>
-                        getDoc(doc(db, "leagues", leagueId, "players", uid ))
+                        getDoc(doc(db, "leagues", leagueId, "players", uid))
                     )
                 ); setMembers(memberDocs.map(d => d.data()));
             }
@@ -40,7 +39,8 @@ export default function GamePage() {
                             time: data.time,
                             numTeams: data.numTeams,
                             positionSlots: data.positionSlots,
-                            commissionerId: data.commissionerId
+                            commissionerId: data.commissionerId,
+                            teams: data.teams
                         });
                     }
                     setGameAttendance(data.attendance || {});
@@ -97,7 +97,7 @@ export default function GamePage() {
             <h3>The Game will be played at: {gameData.location.name}</h3>
             {/* <div dangerouslySetInnerHTML={{ __html: gameData.location.embeddedMap }} /> */}
             {/* iframe from google */}
-            <GameMap embeddedMap = {gameData.location.embeddedMap} />
+            <GameMap embeddedMap={gameData.location.embeddedMap} />
             <h3>There are {gameData.numTeams} Teams</h3>
             <h3>Each Team will Have</h3>
             {["QB", "RB", "WR", "TE", "C"].map((pos) => (
@@ -107,6 +107,9 @@ export default function GamePage() {
             ))}
             {isCommissioner && (
                 <button onClick={handleBuildTeams}>Build Teams</button>
+            )}
+            {isCommissioner && (
+                <Link to={`/league/${leagueId}/games/${gameId}/roster`}>Enter Stats</Link>
             )}
             {gameData.teams?.length > 0 && (
                 <div>

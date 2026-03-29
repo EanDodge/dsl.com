@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard"
 import LeagueDashboard from "./pages/LeagueDashboard"
 import CreateGame from "./pages/CreateGame"
 import GamePage from "./pages/GamePage"
+import GameRoster from "./pages/GameRoster"
 import LeagueProfile from "./pages/LeagueProfile"
 import { useAuth } from "./context/AuthContext"
 import { apiGet, apiPost } from "./api"
@@ -88,7 +89,7 @@ export default function App() {
         <Route path="/league/:leagueId" element={<LeagueDashboard />} />
         <Route path="/league/:leagueId/games/create" element={
           <ProtectedRoute>
-              <CreateGame />
+            <CreateGame />
           </ProtectedRoute>
         } />
         <Route path="/league/:leagueId/games/:gameId" element={
@@ -99,6 +100,11 @@ export default function App() {
         <Route path="/league/:leagueId/profile" element={
           <ProtectedRoute>
             <LeagueProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/league/:leagueId/games/:gameId/roster" element={
+          <ProtectedRoute>
+            <GameRoster />
           </ProtectedRoute>
         } />
       </Routes>
