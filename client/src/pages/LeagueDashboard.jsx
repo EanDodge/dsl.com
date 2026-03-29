@@ -49,7 +49,7 @@ export default function LeagueDashboard() {
             {isCommissioner && (
                 <Link to={`/league/${leagueId}/games/create`}>Create Game</Link>
             )}
-
+            <Link to= {`/league/${leagueId}/profile`}>Edit Your Profile</Link>
 
         </div>
     )

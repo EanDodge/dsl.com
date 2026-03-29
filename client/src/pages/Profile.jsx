@@ -27,7 +27,7 @@ export default function Profile(){
     const handleSave = async() => {
         const {displayName,bio} = formData;
         await updateDoc(doc(db, "users", currentUser.uid),{displayName,bio} );   
-        
+        setProfileData(formData);
     }
     if (!profileData) return <h1>Loading...</h1>
     
