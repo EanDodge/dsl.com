@@ -111,6 +111,7 @@ export default function GamePage() {
             {isCommissioner && (
                 <Link to={`/league/${leagueId}/games/${gameId}/roster`}>Enter Stats</Link>
             )}
+            <Link to ={`/league/${leagueId}/games/${gameId}/playboard`}>Make a play</Link>
             {gameData.teams?.length > 0 && (
                 <div>
                     <h2>Teams</h2>
