@@ -20,6 +20,7 @@ import LeagueProfile from "./pages/LeagueProfile"
 import LeagueSettings from "./pages/LeagueSettings"
 import { useAuth } from "./context/AuthContext"
 import { apiGet, apiPost } from "./api"
+import Chat from "./pages/Chat"
 
 export default function App() {
   const { currentUser } = useAuth();
@@ -111,6 +112,11 @@ export default function App() {
         <Route path="/league/:leagueId/settings" element={
           <ProtectedRoute>
             <LeagueSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="/league/:leagueId/chat" element={
+          <ProtectedRoute>
+            <Chat />
           </ProtectedRoute>
         } />
       </Routes>

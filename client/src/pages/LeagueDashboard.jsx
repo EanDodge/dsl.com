@@ -54,6 +54,7 @@ export default function LeagueDashboard() {
             {isCommissioner && (
                 <Link to={`/league/${leagueId}/settings`}>League Settings</Link>
             )}
+            <Link to= {`/league/${leagueId}/chat`}>Chat</Link>
 
         </div>
     )
