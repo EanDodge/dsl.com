@@ -30,3 +30,13 @@ export const apiPut = async (path, body, token) => {
     });
     return res.json();
 };
+
+export const apiDelete = async (path, token) => {
+    const res = await fetch(`${BASE_URL}${path}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+    return res.json();
+};

@@ -1,17 +1,16 @@
-import { doc, getDoc } from "firebase/firestore"
+import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { db } from "../firebase"
-import { useParams, useNavigate  } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { useState, useEffect } from "react"
-import { apiPost } from "../api"
+import { apiDelete, apiPost } from "../api"
 
 export default function GameRoster() {
     const { leagueId, gameId } = useParams();
     const { currentUser, loading } = useAuth();
     const nav = useNavigate();
-    const [players, setPlayers] = useState([]);    
-    const [formData, setFormData] = useState({});   
-
+    const [players, setPlayers] = useState([]);
+    const [formData, setFormData] = useState({});
     const defaultStats = {
         passingTDs: 0,
         receivingTDs: 0,
@@ -64,6 +63,12 @@ export default function GameRoster() {
         console.log(result);
         nav(`/league/${leagueId}/games/${gameId}`)
 
+    }
+    const handleClear = async () => {
+        const token = await currentUser.getIdToken();
+        const result = await apiDelete(`/api/leagues/${leagueId}/games/${gameId}/stats`, token);
+        console.log(result);
+        //nav(`/league/${leagueId}/games/${gameId}`)
     }
 
     if (loading || players.length === 0) return <h1>Loading...</h1>
@@ -128,6 +133,7 @@ export default function GameRoster() {
                 </div>
             ))}
             <button onClick={handleSubmit}>Save Stats</button>
+            <button onClick={handleClear}>Clear Stats</button>
         </div>
     )
 }

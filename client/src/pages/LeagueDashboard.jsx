@@ -31,6 +31,7 @@ export default function LeagueDashboard() {
     if (loading) return <h1>Loading...</h1>
     if (!leagueData) return <h1>Loading...</h1>
     const isCommissioner = currentUser?.uid === leagueData?.commissionerId;
+    
     return (
         <div>
             <h1>Welcome to {leagueData.name || "Your League"}</h1>
@@ -49,7 +50,10 @@ export default function LeagueDashboard() {
             {isCommissioner && (
                 <Link to={`/league/${leagueId}/games/create`}>Create Game</Link>
             )}
-            <Link to= {`/league/${leagueId}/profile`}>Edit Your Profile</Link>
+            <Link to={`/league/${leagueId}/profile`}>Edit Your Profile</Link>
+            {isCommissioner && (
+                <Link to={`/league/${leagueId}/settings`}>League Settings</Link>
+            )}
 
         </div>
     )
