@@ -49,7 +49,7 @@ export default function GameRoster() {
 
         }
         fetchData();
-    }, refresh[]);
+    }, [refresh]);
 
     const handleChange = (uid, field, value) => {
         setFormData({
