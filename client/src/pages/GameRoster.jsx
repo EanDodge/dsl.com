@@ -11,6 +11,7 @@ export default function GameRoster() {
     const nav = useNavigate();
     const [players, setPlayers] = useState([]);
     const [formData, setFormData] = useState({});
+    const [refresh, setRefresh] = useState(0);
     const defaultStats = {
         passingTDs: 0,
         receivingTDs: 0,
@@ -48,7 +49,7 @@ export default function GameRoster() {
 
         }
         fetchData();
-    }, []);
+    }, refresh[]);
 
     const handleChange = (uid, field, value) => {
         setFormData({
@@ -68,7 +69,7 @@ export default function GameRoster() {
         const token = await currentUser.getIdToken();
         const result = await apiDelete(`/api/leagues/${leagueId}/games/${gameId}/stats`, token);
         console.log(result);
-        //nav(`/league/${leagueId}/games/${gameId}`)
+        setRefresh(refresh + 1);
     }
 
     if (loading || players.length === 0) return <h1>Loading...</h1>
