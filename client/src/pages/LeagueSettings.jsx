@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { doc, getDoc, addDoc, updateDoc, serverTimestamp, collection } from "firebase/firestore"
 import { db } from "../firebase"
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 
 export default function LeagueSettings() {
     const { leagueId } = useParams();
     const { loading, currentUser } = useAuth();
+    const nav = useNavigate();
     const [leagueData, setLeagueData] = useState(null);
     const [statWeights, setStatWeights] = useState(
         {
@@ -63,35 +64,124 @@ export default function LeagueSettings() {
         setCompare(statWeights);  // ← reset compare so isDirty becomes false
     }
 
-    if (loading || !leagueData) return <h1>Loading...</h1>
+    if (loading || !leagueData) return <div className="flex items-center justify-center h-screen"><p className="text-gray-500">Loading...</p></div>
     const isComissioner = currentUser?.uid === leagueData?.commissionerId;
-    if (!isComissioner) return <h1>This is for Comissioner's eyes only</h1>
+    if (!isComissioner) return <div className="flex items-center justify-center h-screen"><p className="text-red-600 font-semibold">Commissioners only</p></div>
     const isDirty = JSON.stringify(statWeights) !== JSON.stringify(compareStat);
     return (
-        <div>
-            <h1>Game Settings</h1>
-            <div>
-                <h2>Stat Weights</h2>
-                <span>Passing Touchdowns:
-                    <input name="passingTDs" type="number" value={statWeights.passingTDs} onChange={handleChange} /></span>
-                <span>Recieving Touchdowns:
-                    <input name="receivingTDs" type="number" value={statWeights.receivingTDs} onChange={handleChange} /></span>
-                <span>Rushing Touchdowns:
-                    <input name="rushingTDs" type="number" value={statWeights.rushingTDs} onChange={handleChange} /></span>
-                <span>Defensive Touchdowns:
-                    <input name="defensiveTDs" type="number" value={statWeights.defensiveTDs} onChange={handleChange} /></span>
-                <span>Defensive Turnover:
-                    <input name="defensiveTurnovers" type="number" value={statWeights.defensiveTurnovers} onChange={handleChange} /></span>
-                <span>Offensive Turnover:
-                    <input name="offensiveTurnovers" type="number" value={statWeights.offensiveTurnovers} onChange={handleChange} /></span>
-                <span>MVP Game:
-                    <input name="mvp" type="number" value={statWeights.mvp} onChange={handleChange} /></span>
-                <span>Active Game:
-                    <input name="gameActive" type="number" value={statWeights.gameActive} onChange={handleChange} /></span>
-                <span>Missed Game:
-                    <input name="missedGame" type="number" value={statWeights.missedGame} onChange={handleChange} /></span>
-            </div>
-            {isDirty && <button onClick={handleSave}>Save</button>}
+        <div className="pt-20 pb-8 px-4 md:px-8 max-w-2xl mx-auto">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">League Settings</h1>
+            <p className="text-gray-500 mb-8">Configure how stats are weighted to calculate player ratings</p>
+
+            <form className="space-y-8">
+                <div>
+                    <h3 className="text-sm font-medium text-gray-900 mb-3 pb-3 border-b border-gray-200">Stat Weights</h3>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Passing Touchdowns</label>
+                                <input
+                                    name="passingTDs"
+                                    type="number"
+                                    value={statWeights.passingTDs}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Receiving Touchdowns</label>
+                                <input
+                                    name="receivingTDs"
+                                    type="number"
+                                    value={statWeights.receivingTDs}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Rushing Touchdowns</label>
+                                <input
+                                    name="rushingTDs"
+                                    type="number"
+                                    value={statWeights.rushingTDs}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Defensive Touchdowns</label>
+                                <input
+                                    name="defensiveTDs"
+                                    type="number"
+                                    value={statWeights.defensiveTDs}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Defensive Turnovers</label>
+                                <input
+                                    name="defensiveTurnovers"
+                                    type="number"
+                                    value={statWeights.defensiveTurnovers}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Offensive Turnovers</label>
+                                <input
+                                    name="offensiveTurnovers"
+                                    type="number"
+                                    value={statWeights.offensiveTurnovers}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">MVP Game</label>
+                                <input
+                                    name="mvp"
+                                    type="number"
+                                    value={statWeights.mvp}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Active Game</label>
+                                <input
+                                    name="gameActive"
+                                    type="number"
+                                    value={statWeights.gameActive}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Missed Game</label>
+                                <input
+                                    name="missedGame"
+                                    type="number"
+                                    value={statWeights.missedGame}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {isDirty && (
+                    <button
+                        type="button"
+                        onClick={handleSave}
+                        className="w-full btn-primary transition-opacity opacity-100 animate-fadeIn"
+                    >
+                        Save Settings
+                    </button>
+                )}
+            </form>
         </div>
     )
 

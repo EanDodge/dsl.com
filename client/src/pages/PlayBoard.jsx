@@ -29,14 +29,14 @@ const TEAM_COLORS = {
 // ─── Starting Formation Positions ────────────────────────────────────────────
 // Returns a list of {x, y} starting positions spread across the field.
 // Team 1 starts on the bottom half, Team 2 on the top half.
-function getStartingPositions(teamIndex, playerIndex, totalOnTeam) {
-    const margin = 60;
-    const usableWidth = CANVAS_WIDTH - margin * 2;
+function getStartingPositions(teamIndex, playerIndex, totalOnTeam, width = CANVAS_WIDTH, height = CANVAS_HEIGHT) {
+    const margin = Math.max(40, Math.round(width * 0.06));
+    const usableWidth = width - margin * 2;
     const spacing = totalOnTeam > 1 ? usableWidth / (totalOnTeam - 1) : usableWidth / 2;
-    const x = totalOnTeam > 1 ? margin + playerIndex * spacing : CANVAS_WIDTH / 2;
+    const x = totalOnTeam > 1 ? margin + playerIndex * spacing : width / 2;
     const y = teamIndex === 0
-        ? CANVAS_HEIGHT * 0.75  // Team 1 bottom
-        : CANVAS_HEIGHT * 0.25; // Team 2 top
+        ? height * 0.75  // Team 1 bottom
+        : height * 0.25; // Team 2 top
     return { x, y };
 }
 
@@ -62,8 +62,8 @@ export default function PlayBoard() {
     const [isDrawingRoute, setIsDrawingRoute] = useState(false);
     const [currentRoutePoints, setCurrentRoutePoints] = useState([]);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-    const [canvasWidth, setCanvasWidth] = useState(900);
-    const [canvasHeight, setCanvasHeight] = useState(520);
+    const [canvasWidth, setCanvasWidth] = useState(Math.min(600, window.innerWidth - 80));
+    const [canvasHeight, setCanvasHeight] = useState(Math.round((Math.min(600, window.innerWidth - 80)) / (900 / 520)));
     const clickTimer = useRef(null);
     // ── Team visibility ──
     // showBothTeams: true = show all players, false = only show your team
@@ -75,6 +75,7 @@ export default function PlayBoard() {
     const [savedPlays, setSavedPlays] = useState([]);
     const [playName, setPlayName] = useState("");
     const [saveStatus, setSaveStatus] = useState(""); // feedback message
+    const [isMobile, setIsMobile] = useState(false);
 
     // ── Initial positions for reset ──
     const [initialPositions, setInitialPositions] = useState({});
@@ -101,9 +102,16 @@ export default function PlayBoard() {
             if (!container) return;
 
             const maxWidth = Math.min(container.clientWidth - 4, window.innerWidth - 40);
+            const maxHeight = Math.max(300, window.innerHeight - 260);
             const aspectRatio = 900 / 520; // 16:9-ish
-            const newWidth = Math.max(300, maxWidth);
-            const newHeight = Math.round(newWidth / aspectRatio);
+
+            let newWidth = Math.max(300, maxWidth);
+            let newHeight = Math.round(newWidth / aspectRatio);
+
+            if (newHeight > maxHeight) {
+                newHeight = Math.max(300, maxHeight);
+                newWidth = Math.round(newHeight * aspectRatio);
+            }
 
             // Scale player positions if width changed significantly
             const oldWidth = canvasWidth;
@@ -130,6 +138,24 @@ export default function PlayBoard() {
 
         return () => resizeObserver.disconnect();
     }, [canvasWidth, canvasHeight]);
+
+    useEffect(() => {
+        const mq = window.matchMedia("(max-width: 768px)");
+        const updateMobile = () => setIsMobile(mq.matches);
+        updateMobile();
+        if (mq.addEventListener) {
+            mq.addEventListener("change", updateMobile);
+        } else {
+            mq.addListener(updateMobile);
+        }
+        return () => {
+            if (mq.removeEventListener) {
+                mq.removeEventListener("change", updateMobile);
+            } else {
+                mq.removeListener(updateMobile);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -192,11 +218,11 @@ export default function PlayBoard() {
                         if (!playerSnap || !playerSnap.exists()) return;
                         const data = playerSnap.data();
 
-                        // Starting position
+                        // Starting position based on current canvas size
                         const pos =
                             teamIndex === "unassigned"
-                                ? { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 }
-                                : getStartingPositions(teamIndex, playerIndex, uids.length);
+                                ? { x: canvasWidth / 2, y: canvasHeight / 2 }
+                                : getStartingPositions(teamIndex, playerIndex, uids.length, canvasWidth, canvasHeight);
 
                         const player = {
                             uid,
@@ -274,28 +300,15 @@ export default function PlayBoard() {
         }
         if (!isDrawingRoute || !selectedPlayerUid) return;
 
-        // Clear any existing timer
-        if (clickTimer.current) {
-            // Second click came in fast enough — treat as double-click
-            clearTimeout(clickTimer.current);
-            clickTimer.current = null;
-            handleFinishRoute();
-            return;
+        const stage = stageRef.current;
+        const pos = stage?.getPointerPosition();
+        if (pos) {
+            setCurrentRoutePoints((prev) => [...prev, pos.x, pos.y]);
         }
-
-        // First click — wait to see if a second comes
-        clickTimer.current = setTimeout(() => {
-            clickTimer.current = null;
-            // Single click — add point
-            const stage = stageRef.current;
-            const pos = stage.getPointerPosition();
-            if (pos) setCurrentRoutePoints((prev) => [...prev, pos.x, pos.y]);
-        }, 250);  // 250ms window
     };
 
-    // ─── Handle double-click to finish route ─────────────────────────────────
     const handleFinishRoute = () => {
-        if (currentRoutePoints.length >= 4) {
+        if (currentRoutePoints.length >= 2) {
             const selectedPlayer = players.find((p) => p.uid === selectedPlayerUid);
             if (selectedPlayer) {
                 const fullPoints = [
@@ -314,6 +327,11 @@ export default function PlayBoard() {
                 ]);
             }
         }
+        setCurrentRoutePoints([]);
+        setIsDrawingRoute(false);
+    };
+
+    const handleCancelRoute = () => {
         setCurrentRoutePoints([]);
         setIsDrawingRoute(false);
     };
@@ -411,90 +429,140 @@ export default function PlayBoard() {
 
     // ─── Render ───────────────────────────────────────────────────────────────
     return (
-        <div style={{ fontFamily: "sans-serif", padding: "12px", backgroundColor: "#1a1a2e", minHeight: "100vh", color: "#eee" }}>
-            <h2 style={{ marginBottom: "10px", color: "#f0c040" }}>Play Board</h2>
+        <div style={{ fontFamily: "sans-serif", backgroundColor: "#1a1a2e", minHeight: "100vh", color: "#eee", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            {/* Header with Back Button */}
+            <div style={{ paddingTop: "60px", paddingLeft: "12px", paddingRight: "12px", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                <button
+                    onClick={() => window.history.back()}
+                    style={{
+                        width: "40px",
+                        height: "40px",
+                        padding: "0",
+                        background: "#555",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "20px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                    }}
+                    title="Go back to previous page"
+                >
+                    &lt;
+                </button>
+                <h2 style={{ marginBottom: "0", color: "#f0c040", fontSize: "20px" }}>Play Board</h2>
+            </div>
+
+            {/* Main Content with Padding - scrollable */}
+            <div style={{ padding: "8px 12px", overflowY: "auto", flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
 
             {/* ── Toolbar ── */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px", alignItems: "center" }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(auto-fit, minmax(120px, max-content))", gap: "6px", marginBottom: "10px", alignItems: "start", maxWidth: "100%" }}>
                 {/* Draw Route */}
                 <button
                     onClick={toggleDrawRoute}
                     style={{
-                        padding: "6px 14px",
+                        padding: "6px 10px",
                         background: isDrawingRoute ? "#27ae60" : "#555",
                         color: "#fff",
                         border: "none",
                         borderRadius: "4px",
                         cursor: "pointer",
+                        fontSize: "12px",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                     }}
                 >
-                    {isDrawingRoute ? "⏹ Stop Drawing" : "✏️ Draw Route"}
+                    {isDrawingRoute ? "✋ Adding Points" : "✏️ Draw Route"}
                 </button>
+
+                {isDrawingRoute && (
+                    <>
+                        <button
+                            onClick={handleFinishRoute}
+                            style={{ padding: "6px 10px", background: "#2ecc71", color: "#111", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap" }}
+                        >
+                            ✅ Finish
+                        </button>
+                        <button
+                            onClick={handleCancelRoute}
+                            style={{ padding: "6px 10px", background: "#7f8c8d", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap" }}
+                        >
+                            ✖ Cancel
+                        </button>
+                    </>
+                )}
 
                 {/* Clear Routes */}
                 <button
                     onClick={handleClearRoutes}
-                    style={{ padding: "6px 14px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                    style={{ padding: "6px 10px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap" }}
                 >
-                    🗑 Clear Routes
+                    🗑 Clear
                 </button>
 
                 {/* Reset */}
                 <button
                     onClick={handleReset}
-                    style={{ padding: "6px 14px", background: "#2980b9", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                    style={{ padding: "6px 10px", background: "#2980b9", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap" }}
                 >
                     ↺ Reset
                 </button>
 
-                {/* Save Play */}
+                {/* Show Both Teams Toggle */}
+                <label style={{ display: "flex", alignItems: "center", gap: "4px", cursor: "pointer", userSelect: "none", fontSize: "12px", padding: "6px 10px" }}>
+                    <input
+                        type="checkbox"
+                        checked={showBothTeams}
+                        onChange={(e) => setShowBothTeams(e.target.checked)}
+                        style={{ width: "14px", height: "14px" }}
+                    />
+                    Both Teams
+                </label>
+            </div>
+
+            {/* Save Play Section */}
+            <div style={{ display: "flex", gap: "6px", marginBottom: "8px", maxWidth: "100%" }}>
                 <input
                     placeholder="Play name..."
                     value={playName}
                     onChange={(e) => setPlayName(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSavePlay()}
-                    style={{ padding: "6px 10px", borderRadius: "4px", border: "1px solid #555", background: "#2a2a3e", color: "#eee", width: "160px" }}
+                    style={{ padding: "6px 8px", borderRadius: "4px", border: "1px solid #555", background: "#2a2a3e", color: "#eee", flex: 1, minWidth: "100px", fontSize: "12px" }}
                 />
                 <button
                     onClick={handleSavePlay}
-                    style={{ padding: "6px 14px", background: "#8e44ad", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                    style={{ padding: "6px 12px", background: "#8e44ad", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap" }}
                 >
-                    💾 Save Play
+                    💾 Save
                 </button>
-
-                {/* Show Both Teams Toggle */}
-                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", userSelect: "none" }}>
-                    <input
-                        type="checkbox"
-                        checked={showBothTeams}
-                        onChange={(e) => setShowBothTeams(e.target.checked)}
-                        style={{ width: "16px", height: "16px" }}
-                    />
-                    Show Both Teams
-                </label>
             </div>
 
             {/* ── Status / Hint ── */}
             {saveStatus && (
-                <div style={{ marginBottom: "8px", color: "#f0c040", fontSize: "13px" }}>
+                <div style={{ marginBottom: "6px", color: "#f0c040", fontSize: "12px" }}>
                     {saveStatus}
                 </div>
             )}
             {isDrawingRoute && (
-                <div style={{ marginBottom: "8px", color: "#2ecc71", fontSize: "13px" }}>
-                    Click on the field to place route points. Double-click to finish.
+                <div style={{ marginBottom: "6px", color: "#2ecc71", fontSize: "12px" }}>
+                    Tap the field to add points • press Finish to complete
                 </div>
             )}
             {!isDrawingRoute && selectedPlayerUid && (
-                <div style={{ marginBottom: "8px", color: "#aaa", fontSize: "13px" }}>
-                    Selected: <strong style={{ color: "#fff" }}>{selectedPlayer?.displayName}</strong> — click "Draw Route" to draw their route, or drag them on the field.
+                <div style={{ marginBottom: "6px", color: "#aaa", fontSize: "12px" }}>
+                    Selected: <strong style={{ color: "#fff" }}>{selectedPlayer?.displayName}</strong>
                 </div>
             )}
 
             {/* ── Saved Plays List ── */}
             {savedPlays.length > 0 && (
-                <div style={{ marginBottom: "10px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                    <span style={{ color: "#aaa", fontSize: "13px", alignSelf: "center" }}>Load:</span>
+                <div style={{ marginBottom: "8px", display: "flex", flexWrap: "wrap", gap: "4px", maxWidth: "100%" }}>
+                    <span style={{ color: "#aaa", fontSize: "11px", alignSelf: "center" }}>Load:</span>
                     {savedPlays.map((play) => (
                         <button
                             key={play.id}
@@ -516,14 +584,14 @@ export default function PlayBoard() {
             )}
 
             {/* ── Canvas ── */}
-            <div ref={containerRef} style={{ border: "2px solid #444", borderRadius: "6px", overflow: "hidden", maxWidth: "100%" }}>
+            <div ref={containerRef} style={{ border: "2px solid #444", borderRadius: "6px", overflow: "hidden", maxWidth: "100%", width: "100%", flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Stage
                     width={canvasWidth}
                     height={canvasHeight}
                     ref={stageRef}
                     onClick={handleStageClick}
                     onMouseMove={handleMouseMove}
-                    style={{ cursor: isDrawingRoute ? "crosshair" : "default" }}
+                    style={{ cursor: isDrawingRoute ? "crosshair" : "default", maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
                 >
                     <Layer>
                         {/* ── Field Background ── */}
@@ -668,16 +736,14 @@ export default function PlayBoard() {
             </div>
 
             {/* ── Legend ── */}
-            <div style={{ marginTop: "10px", display: "flex", gap: "16px", fontSize: "13px", color: "#aaa" }}>
+            <div style={{ marginTop: "8px", display: "flex", gap: "12px", flexWrap: "wrap", fontSize: "11px", color: "#aaa", maxWidth: "100%" }}>
                 {Object.entries(TEAM_COLORS).map(([key, color]) => (
-                    <div key={key} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                        <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: color }} />
+                    <div key={key} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: color }} />
                         {key === "unassigned" ? "No Team" : `Team ${parseInt(key) + 1}`}
                     </div>
                 ))}
-                <div style={{ marginLeft: "auto", color: "#666", fontSize: "12px" }}>
-                    Drag tokens to move • Click to select • Draw Route to add arrows • Double-click to finish route
-                </div>
+            </div>
             </div>
         </div>
     );

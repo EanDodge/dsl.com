@@ -8,13 +8,17 @@ export default function CreatePost({ docID }) {
     const nav = useNavigate();
     const { currentUser } = useAuth();
     const [formData, setFormData] = useState({ title: "", body: "" });
+    const [originalData, setOriginalData] = useState({ title: "", body: "" });
     const isEditing = !!docID;
+
     useEffect(() => {
         if (!isEditing) return;
         const findDocument = async () => {
             const snapShot = await getDoc(doc(db, "news", docID));
             if (snapShot.exists()) {
-                setFormData(snapShot.data());
+                const data = snapShot.data();
+                setFormData(data);
+                setOriginalData(data);
             }
             else{
                     nav("/not-found");
@@ -24,9 +28,11 @@ export default function CreatePost({ docID }) {
         }
         findDocument();
     }, [docID]);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value })
     }
+
     const handlePublish = async () => {
         if (isEditing) {
             await updateDoc(doc(db, "news", docID), {
@@ -45,24 +51,57 @@ export default function CreatePost({ docID }) {
 
         nav("/news");
     }
-    return (
-        <div>
-            <div>
-                <h1>Title</h1>
-                <input
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                /></div>
-            <div>
-                <textarea
-                    name="body"
-                    value={formData.body}
-                    onChange={handleChange} />
-            </div>
-            <button onClick={handlePublish}>Save</button>
-        </div>
 
+    const isDirty = JSON.stringify(formData) !== JSON.stringify(originalData);
+
+    return (
+        <div className="pt-20 pb-8 px-4 md:px-8 max-w-2xl mx-auto">
+            <h1 className="text-4xl font-bold text-gray-900 mb-8">{isEditing ? "Edit Post" : "Create News Post"}</h1>
+
+            <form className="space-y-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Title</label>
+                    <input
+                        type="text"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleChange}
+                        placeholder="Enter post title"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Content</label>
+                    <textarea
+                        name="body"
+                        value={formData.body}
+                        onChange={handleChange}
+                        placeholder="Write your post content here..."
+                        rows="12"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 resize-none" style={{ "--tw-ring-color": "#FF6B00" }}
+                    />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                    <button
+                        type="button"
+                        onClick={handlePublish}
+                        className="btn-primary"
+                        disabled={!formData.title || !formData.body}
+                    >
+                        {isEditing ? "Update Post" : "Publish Post"}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => nav("/news")}
+                        className="btn-secondary"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
     )
 
 

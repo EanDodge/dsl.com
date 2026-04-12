@@ -30,13 +30,16 @@ export default function Sidebar() {
     fetchLeague();
   }, [leagueId, currentUser]);
 
-  const isActive = (path) => location.pathname.includes(path);
+  const isActive = (path) => {
+    if (path === `/league/${leagueId}`) {
+      return location.pathname === path;
+    }
+    return location.pathname.includes(path);
+  };
 
   const navItems = [
     { path: `/league/${leagueId}`, label: "Dashboard", icon: "🏠" },
-    { path: `/league/${leagueId}/games`, label: "Games", icon: "📅" },
     { path: `/league/${leagueId}/chat`, label: "Chat", icon: "💬" },
-    { path: `/league/${leagueId}/profile`, label: "Roster", icon: "👥" },
     { path: `/league/${leagueId}/profile`, label: "My Profile", icon: "👤" },
   ];
 

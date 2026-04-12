@@ -32,9 +32,8 @@ export default function BottomNav() {
 
   const navItems = [
     { path: `/league/${leagueId}`, label: "Dashboard", icon: "🏠" },
-    { path: `/league/${leagueId}/games`, label: "Games", icon: "📅" },
     { path: `/league/${leagueId}/chat`, label: "Chat", icon: "💬" },
-    { path: `/league/${leagueId}/profile`, label: "Roster", icon: "👥" },
+    { path: `/league/${leagueId}/profile`, label: "Profile", icon: "👤" },
   ];
 
   if (isCommissioner) {
