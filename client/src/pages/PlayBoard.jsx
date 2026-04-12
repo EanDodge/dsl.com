@@ -1,3 +1,6 @@
+//This Code was written by claude AI. I approved the code after reviewing
+//Ean Dodge
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Stage, Layer, Image, Group, Circle, Text, Arrow, Line, Rect } from "react-konva";
 import { useParams } from "react-router-dom";
