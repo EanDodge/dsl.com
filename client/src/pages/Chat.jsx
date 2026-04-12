@@ -55,9 +55,12 @@ export default function Chat() {
     }
 
     return (
-        <div className="flex flex-col h-screen pt-16 pb-20 md:pb-0">
+        <div className="flex flex-col h-screen overflow-hidden pt-16 pb-20 md:pb-0">
             {/* Messages area */}
-            <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div
+                className="flex-1 overflow-y-auto px-4 py-4"
+                style={{ touchAction: 'pan-y', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
+            >
                 <div className="max-w-4xl mx-auto space-y-4">
                     {messages.length === 0 ? (
                         <p className="text-center text-gray-500 py-8">No messages yet. Start the conversation!</p>

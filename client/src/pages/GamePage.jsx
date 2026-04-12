@@ -14,6 +14,7 @@ export default function GamePage() {
     const [gameAttendance, setGameAttendance] = useState({});
     const [gameTeams, setGameTeams] = useState([]);
     const [members, setMembers] = useState(null);
+    const [isMobile, setIsMobile] = useState(false);
     const nav = useNavigate();
     useEffect(() => {
         const fetchMembers = async () => {
@@ -31,6 +32,24 @@ export default function GamePage() {
                 }
         }
         fetchMembers();
+    }, []);
+
+    useEffect(() => {
+        const mq = window.matchMedia("(max-width: 768px)");
+        const updateMobile = () => setIsMobile(mq.matches);
+        updateMobile();
+        if (mq.addEventListener) {
+            mq.addEventListener("change", updateMobile);
+        } else {
+            mq.addListener(updateMobile);
+        }
+        return () => {
+            if (mq.removeEventListener) {
+                mq.removeEventListener("change", updateMobile);
+            } else {
+                mq.removeListener(updateMobile);
+            }
+        };
     }, []);
     useEffect(() => {
         const unsubscribe = onSnapshot(
@@ -166,7 +185,7 @@ export default function GamePage() {
                         Enter Stats
                     </Link>
                     <Link to={`playboard`} className="btn-secondary text-center">
-                        Make a Play
+                        {isMobile ? "Playbook" : "Make a Play"}
                     </Link>
                 </div>
             )}
@@ -174,7 +193,7 @@ export default function GamePage() {
             {!isCommissioner && (
                 <div className="mb-8">
                     <Link to={`playboard`} className="btn-primary inline-block">
-                        Make a Play
+                        {isMobile ? "Playbook" : "Make a Play"}
                     </Link>
                 </div>
             )}

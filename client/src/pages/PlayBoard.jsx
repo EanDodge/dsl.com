@@ -355,6 +355,8 @@ export default function PlayBoard() {
                 name: playName.trim(),
                 players: players.map(({ uid, x, y, teamIndex }) => ({ uid, x, y, teamIndex })),
                 routes,
+                canvasWidth,
+                canvasHeight,
                 createdBy: currentUser.uid,
                 createdByName: userProfile?.displayName || "Unknown",
                 createdAt: serverTimestamp(),
@@ -371,16 +373,34 @@ export default function PlayBoard() {
 
     // ─── Load a saved play ────────────────────────────────────────────────────
     const handleLoadPlay = (play) => {
-        // Restore positions from the saved play, keep other player data intact
+        const sourceWidth = play.canvasWidth || CANVAS_WIDTH;
+        const sourceHeight = play.canvasHeight || CANVAS_HEIGHT;
+        const xScale = canvasWidth / sourceWidth;
+        const yScale = canvasHeight / sourceHeight;
+
         setPlayers((prev) =>
             prev.map((p) => {
                 const saved = play.players.find((sp) => sp.uid === p.uid);
-                return saved ? { ...p, x: saved.x, y: saved.y } : p;
+                return saved
+                    ? {
+                          ...p,
+                          x: Math.round(saved.x * xScale),
+                          y: Math.round(saved.y * yScale),
+                      }
+                    : p;
             })
         );
-        setRoutes(play.routes || []);
+        setRoutes(
+            (play.routes || []).map((route) => ({
+                ...route,
+                points: route.points.map((value, index) =>
+                    index % 2 === 0 ? Math.round(value * xScale) : Math.round(value * yScale)
+                ),
+            }))
+        );
         setCurrentRoutePoints([]);
         setIsDrawingRoute(false);
+        setSelectedPlayerUid(null);
     };
 
     // ─── Clear routes ─────────────────────────────────────────────────────────
@@ -453,7 +473,14 @@ export default function PlayBoard() {
                 >
                     &lt;
                 </button>
-                <h2 style={{ marginBottom: "0", color: "#f0c040", fontSize: "20px" }}>Play Board</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <h2 style={{ marginBottom: "0", color: "#f0c040", fontSize: "20px" }}>{isMobile ? "Playbook" : "Play Board"}</h2>
+                    {isMobile && (
+                        <span style={{ color: "#aad4ff", fontSize: "12px" }}>
+                            Mobile view is read-only. You can only make plays on computer.
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Main Content with Padding - scrollable */}
@@ -461,26 +488,27 @@ export default function PlayBoard() {
 
             {/* ── Toolbar ── */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(auto-fit, minmax(120px, max-content))", gap: "6px", marginBottom: "10px", alignItems: "start", maxWidth: "100%" }}>
-                {/* Draw Route */}
-                <button
-                    onClick={toggleDrawRoute}
-                    style={{
-                        padding: "6px 10px",
-                        background: isDrawingRoute ? "#27ae60" : "#555",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "12px",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                    }}
-                >
-                    {isDrawingRoute ? "✋ Adding Points" : "✏️ Draw Route"}
-                </button>
+                {!isMobile && (
+                    <button
+                        onClick={toggleDrawRoute}
+                        style={{
+                            padding: "6px 10px",
+                            background: isDrawingRoute ? "#27ae60" : "#555",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                        }}
+                    >
+                        {isDrawingRoute ? "✋ Adding Points" : "✏️ Draw Route"}
+                    </button>
+                )}
 
-                {isDrawingRoute && (
+                {isDrawingRoute && !isMobile && (
                     <>
                         <button
                             onClick={handleFinishRoute}
@@ -497,7 +525,6 @@ export default function PlayBoard() {
                     </>
                 )}
 
-                {/* Clear Routes */}
                 <button
                     onClick={handleClearRoutes}
                     style={{ padding: "6px 10px", background: "#c0392b", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap" }}
@@ -505,7 +532,6 @@ export default function PlayBoard() {
                     🗑 Clear
                 </button>
 
-                {/* Reset */}
                 <button
                     onClick={handleReset}
                     style={{ padding: "6px 10px", background: "#2980b9", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap" }}
@@ -513,7 +539,6 @@ export default function PlayBoard() {
                     ↺ Reset
                 </button>
 
-                {/* Show Both Teams Toggle */}
                 <label style={{ display: "flex", alignItems: "center", gap: "4px", cursor: "pointer", userSelect: "none", fontSize: "12px", padding: "6px 10px" }}>
                     <input
                         type="checkbox"
@@ -524,23 +549,30 @@ export default function PlayBoard() {
                     Both Teams
                 </label>
             </div>
+            {isMobile && (
+                <div style={{ marginBottom: "10px", color: "#aad4ff", fontSize: "12px" }}>
+                    Mobile playbook mode: saved plays are view-only here.
+                </div>
+            )}
 
             {/* Save Play Section */}
-            <div style={{ display: "flex", gap: "6px", marginBottom: "8px", maxWidth: "100%" }}>
-                <input
-                    placeholder="Play name..."
-                    value={playName}
-                    onChange={(e) => setPlayName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSavePlay()}
-                    style={{ padding: "6px 8px", borderRadius: "4px", border: "1px solid #555", background: "#2a2a3e", color: "#eee", flex: 1, minWidth: "100px", fontSize: "12px" }}
-                />
-                <button
-                    onClick={handleSavePlay}
-                    style={{ padding: "6px 12px", background: "#8e44ad", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap" }}
-                >
-                    💾 Save
-                </button>
-            </div>
+            {!isMobile && (
+                <div style={{ display: "flex", gap: "6px", marginBottom: "8px", maxWidth: "100%" }}>
+                    <input
+                        placeholder="Play name..."
+                        value={playName}
+                        onChange={(e) => setPlayName(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSavePlay()}
+                        style={{ padding: "6px 8px", borderRadius: "4px", border: "1px solid #555", background: "#2a2a3e", color: "#eee", flex: 1, minWidth: "100px", fontSize: "12px" }}
+                    />
+                    <button
+                        onClick={handleSavePlay}
+                        style={{ padding: "6px 12px", background: "#8e44ad", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap" }}
+                    >
+                        💾 Save
+                    </button>
+                </div>
+            )}
 
             {/* ── Status / Hint ── */}
             {saveStatus && (
