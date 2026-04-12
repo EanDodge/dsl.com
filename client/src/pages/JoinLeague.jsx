@@ -47,12 +47,33 @@ export default function JoinLeague() {
     }
 
     return (
-        <div>
-            <h1>Join a League</h1>
-            <h3>Invite Code</h3>
-            <input name="inviteCode" placeholder="ex. ABC123"
-                value={formData.inviteCode} onChange={handleChange} />
-            {codeFull && <button onClick={handleJoin}>Join League</button>}
+        <div className="pt-20 pb-8 px-4 md:px-8 max-w-2xl mx-auto">
+            <h1 className="text-4xl font-bold text-gray-900 mb-8">Join a League</h1>
+
+            <form className="space-y-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Invite Code</label>
+                    <input
+                        type="text"
+                        name="inviteCode"
+                        placeholder="ex. ABC123"
+                        value={formData.inviteCode}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 text-center text-lg tracking-widest" style={{ "--tw-ring-color": "#FF6B00" }}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">You'll receive this code from your league commissioner.</p>
+                </div>
+
+                {codeFull && (
+                    <button
+                        type="button"
+                        onClick={handleJoin}
+                        className="w-full btn-primary transition-opacity opacity-100 animate-fadeIn"
+                    >
+                        Join League
+                    </button>
+                )}
+            </form>
         </div>
     )
 

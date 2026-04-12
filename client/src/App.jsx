@@ -22,6 +22,8 @@ import { useAuth } from "./context/AuthContext"
 import { apiGet, apiPost } from "./api"
 import Chat from "./pages/Chat"
 import PlayBoard from "./pages/PlayBoard"
+import NotFound from "./pages/NotFound"
+import LeagueLayout from "./components/LeagueLayout"
 
 export default function App() {
   const { currentUser } = useAuth();
@@ -89,42 +91,23 @@ export default function App() {
           </ProtectedRoute>
         } />
         <Route path="/league/join" element={<JoinLeague />} />
-        <Route path="/league/:leagueId" element={<LeagueDashboard />} />
-        <Route path="/league/:leagueId/games/create" element={
+        <Route path="/league/:leagueId/*" element={
           <ProtectedRoute>
-            <CreateGame />
+            <LeagueLayout>
+              <Routes>
+                <Route path="" element={<LeagueDashboard />} />
+                <Route path="games/create" element={<CreateGame />} />
+                <Route path="games/:gameId" element={<GamePage />} />
+                <Route path="profile" element={<LeagueProfile />} />
+                <Route path="games/:gameId/roster" element={<GameRoster />} />
+                <Route path="settings" element={<LeagueSettings />} />
+                <Route path="chat" element={<Chat />} />
+                <Route path="games/:gameId/playboard" element={<PlayBoard />} />
+              </Routes>
+            </LeagueLayout>
           </ProtectedRoute>
         } />
-        <Route path="/league/:leagueId/games/:gameId" element={
-          <ProtectedRoute>
-            <GamePage />
-          </ProtectedRoute>
-        } />
-        <Route path="/league/:leagueId/profile" element={
-          <ProtectedRoute>
-            <LeagueProfile />
-          </ProtectedRoute>
-        } />
-        <Route path="/league/:leagueId/games/:gameId/roster" element={
-          <ProtectedRoute>
-            <GameRoster />
-          </ProtectedRoute>
-        } />
-        <Route path="/league/:leagueId/settings" element={
-          <ProtectedRoute>
-            <LeagueSettings />
-          </ProtectedRoute>
-        } />
-        <Route path="/league/:leagueId/chat" element={
-          <ProtectedRoute>
-            <Chat />
-          </ProtectedRoute>
-        } />
-        <Route path="/league/:leagueId/games/:gameId/playboard" element={
-          <ProtectedRoute>
-            <PlayBoard />
-          </ProtectedRoute>
-        } />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   )

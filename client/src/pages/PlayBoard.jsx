@@ -16,8 +16,8 @@ import {
 import { db } from "../firebase";
 
 // ─── Canvas Dimensions ───────────────────────────────────────────────────────
-const CANVAS_WIDTH = 900;
-const CANVAS_HEIGHT = 520;
+let CANVAS_WIDTH = 900;
+let CANVAS_HEIGHT = 520;
 
 // ─── Team Colors ─────────────────────────────────────────────────────────────
 const TEAM_COLORS = {
@@ -62,6 +62,8 @@ export default function PlayBoard() {
     const [isDrawingRoute, setIsDrawingRoute] = useState(false);
     const [currentRoutePoints, setCurrentRoutePoints] = useState([]);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const [canvasWidth, setCanvasWidth] = useState(900);
+    const [canvasHeight, setCanvasHeight] = useState(520);
     const clickTimer = useRef(null);
     // ── Team visibility ──
     // showBothTeams: true = show all players, false = only show your team
@@ -79,6 +81,7 @@ export default function PlayBoard() {
 
     // ── Refs ──
     const stageRef = useRef(null);
+    const containerRef = useRef(null);
 
     // ─── Load field image ──────────────────────────────────────────────────────
     useEffect(() => {
@@ -88,11 +91,52 @@ export default function PlayBoard() {
         // If field.png doesn't exist, fieldImage stays null and we render
         // a green rectangle fallback instead.
     }, []);
+
+    // ─── Responsive canvas sizing ──────────────────────────────────────────────
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        const handleResize = () => {
+            const container = containerRef.current;
+            if (!container) return;
+
+            const maxWidth = Math.min(container.clientWidth - 4, window.innerWidth - 40);
+            const aspectRatio = 900 / 520; // 16:9-ish
+            const newWidth = Math.max(300, maxWidth);
+            const newHeight = Math.round(newWidth / aspectRatio);
+
+            // Scale player positions if width changed significantly
+            const oldWidth = canvasWidth;
+            const scaleFactor = newWidth / oldWidth;
+
+            if (Math.abs(scaleFactor - 1) > 0.05) {
+                // Only rescale if change is more than 5%
+                setPlayers((prev) =>
+                    prev.map((p) => ({
+                        ...p,
+                        x: Math.round(p.x * scaleFactor),
+                        y: Math.round(p.y * (newHeight / canvasHeight)),
+                    }))
+                );
+            }
+
+            setCanvasWidth(newWidth);
+            setCanvasHeight(newHeight);
+        };
+
+        const resizeObserver = new ResizeObserver(handleResize);
+        resizeObserver.observe(containerRef.current);
+        handleResize(); // Initial call
+
+        return () => resizeObserver.disconnect();
+    }, [canvasWidth, canvasHeight]);
+
     useEffect(() => {
         return () => {
             if (clickTimer.current) clearTimeout(clickTimer.current);
         };
     }, []);
+
     // ─── Load attending players from the game ────────────────────────────────
     useEffect(() => {
         if (!leagueId || !gameId) return;
@@ -472,10 +516,10 @@ export default function PlayBoard() {
             )}
 
             {/* ── Canvas ── */}
-            <div style={{ border: "2px solid #444", display: "inline-block", borderRadius: "6px", overflow: "hidden" }}>
+            <div ref={containerRef} style={{ border: "2px solid #444", borderRadius: "6px", overflow: "hidden", maxWidth: "100%" }}>
                 <Stage
-                    width={CANVAS_WIDTH}
-                    height={CANVAS_HEIGHT}
+                    width={canvasWidth}
+                    height={canvasHeight}
                     ref={stageRef}
                     onClick={handleStageClick}
                     onMouseMove={handleMouseMove}
@@ -484,18 +528,18 @@ export default function PlayBoard() {
                     <Layer>
                         {/* ── Field Background ── */}
                         {fieldImage ? (
-                            <Image image={fieldImage} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} />
+                            <Image image={fieldImage} width={canvasWidth} height={canvasHeight} />
                         ) : (
                             // Fallback: draw a simple green field with yard lines
                             <>
-                                <Rect x={0} y={0} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="#2d6a2d" />
+                                <Rect x={0} y={0} width={canvasWidth} height={canvasHeight} fill="#2d6a2d" />
                                 {/* Yard lines */}
                                 {[...Array(9)].map((_, i) => {
-                                    const x = (CANVAS_WIDTH / 10) * (i + 1);
+                                    const x = (canvasWidth / 10) * (i + 1);
                                     return (
                                         <Line
                                             key={`yard_${i}`}
-                                            points={[x, 0, x, CANVAS_HEIGHT]}
+                                            points={[x, 0, x, canvasHeight]}
                                             stroke="rgba(255,255,255,0.15)"
                                             strokeWidth={1}
                                         />

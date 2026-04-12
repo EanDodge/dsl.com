@@ -43,6 +43,10 @@ export default function GameRoster() {
                     });
                     setFormData(initialStats);
                 }
+                else{
+                    nav("/not-found");
+                    return;
+                }
 
             };
             getPlayers();

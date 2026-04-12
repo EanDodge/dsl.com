@@ -12,46 +12,52 @@ export function AuthProvider({ children }) {
     const [userProfile, setuserProfile] = useState(null);
     // 2. useEffect with onAuthStateChanged
     useEffect(() => {
-    let unsubscribeProfile = null;
+        let unsubscribeProfile = null;
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-        setCurrentUser(user);
-        setLoading(false);
+        const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+            setCurrentUser(user);
+            setLoading(false);
 
-        if (user) {
-            unsubscribeProfile = onSnapshot(
-                doc(db, "users", user.uid),
-                (snap) => {
-                    if (snap.exists()) setuserProfile(snap.data());
-                    else setuserProfile(null);
+            if (user) {
+                unsubscribeProfile = onSnapshot(
+                    doc(db, "users", user.uid),
+                    (snap) => {
+                        if (snap.exists()) setuserProfile(snap.data());
+                        else setuserProfile(null);
+                    },
+                    (error) => {
+                        // Ignore permission errors during auth transition
+                        if (error.code !== 'permission-denied') {
+                            console.error("Profile snapshot error:", error);
+                        }
+                    }
+                );
+
+                const userSnap = await getDoc(doc(db, "users", user.uid));
+                if (!userSnap.exists()) {
+                    const newProfile = {
+                        uid: user.uid,
+                        displayName: user.displayName,
+                        email: user.email,
+                        photoURL: user.photoURL,
+                        bio: "",
+                        createdAt: serverTimestamp(),
+                        role: "Player",
+                        leagueIds: []
+                    };
+                    await setDoc(doc(db, "users", user.uid), newProfile);
                 }
-            );
-
-            const userSnap = await getDoc(doc(db, "users", user.uid));
-            if (!userSnap.exists()) {
-                const newProfile = {
-                    uid: user.uid,
-                    displayName: user.displayName,
-                    email: user.email,
-                    photoURL: user.photoURL,
-                    bio: "",
-                    createdAt: serverTimestamp(),
-                    role: "Player",
-                    leagueIds: []
-                };
-                await setDoc(doc(db, "users", user.uid), newProfile);
+            } else {
+                setuserProfile(null);
+                if (unsubscribeProfile) unsubscribeProfile();
             }
-        } else {
-            setuserProfile(null);
-            if (unsubscribeProfile) unsubscribeProfile();
-        }
-    });
+        });
 
-    return () => {
-        unsubscribeAuth();
-        if (unsubscribeProfile) unsubscribeProfile();
-    };
-}, []);
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeProfile) unsubscribeProfile();
+        };
+    }, []);
 
     return (
         <AuthContext.Provider value={{ currentUser, loading, userProfile }}>

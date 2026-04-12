@@ -1,0 +1,271 @@
+DESIGN BRIEF FOR DODGE SPORTS LEAGUE (DSL) WEB APP
+====================================================
+For use with GitHub Copilot Agent in VS Code
+React + Vite + Tailwind CSS project
+
+ABSOLUTE RULE — READ THIS FIRST
+================================
+Do NOT make any technical or logical changes to the code. Do not change how any function works, do not rename variables, do not alter data fetching logic, do not add or remove imports related to Firebase, React Router, or any other library unless it is purely for styling purposes (e.g. adding a className). Do not add comments to any existing code. Do not refactor any existing logic. Your job is purely visual — add Tailwind CSS classes, restructure JSX layout elements (divs, nav, aside, main), and create new purely-presentational components. The app must work exactly as it did before you touched it. Every existing piece of functionality must remain intact.
+
+The one technical change that IS allowed: update the Navbar component so that it does not show a link to the page the user is currently on. Use React Router's useLocation hook to get the current path and conditionally render links. For example if the user is on /dashboard, do not show the Dashboard link. If the user is on a league page (/league/:leagueId or any sub-page of it), do not show a Join League or Create League link. Only show links that are useful navigation destinations from the current page. This is the only logic change permitted.
+
+TECH STACK
+==========
+- React 18 with Vite
+- React Router v6
+- Firebase (Firestore, Auth)
+- Tailwind CSS (install if not already present: npm install -D tailwindcss postcss autoprefixer, then npx tailwindcss init -p)
+- The app is a PWA — all layouts must work perfectly when installed as a standalone app on iOS and Android with no browser chrome
+- The app must never require horizontal scrolling on any screen size. All content must fit within the viewport width. Use overflow-x-hidden on the root, and ensure text wraps or truncates appropriately.
+
+OVERALL AESTHETIC DIRECTION
+============================
+Clean, minimal, confident. Think Google's homepage or Apple's settings app — not a sports gaming app, not neon and flashy. The primary palette is white and black with strategic use of the brand colors: neon orange (#FF6B00) and teal (#008E97). Use color purposefully as accents, active states, and highlights — not as backgrounds for large areas. Typography should be clean and readable. Generous whitespace. No clutter.
+
+The goal is that a 50-year-old who has never used a sports app before can open this and immediately understand where they are and what to do.
+
+GLOBAL LAYOUT
+=============
+The app has two distinct layout modes:
+
+1. STANDARD LAYOUT (public pages and dashboard)
+   - Full-width single column
+   - Navbar at the top
+   - Content below
+   - No sidebar
+   - Pages: Home/Landing, About, News, Login, Dashboard, Profile, Join League, Create League
+
+2. LEAGUE LAYOUT (all pages under /league/:leagueId/*)
+   - Persistent sidebar on the left
+   - Main content area on the right
+   - Navbar at the top spanning full width
+   - Pages: League Dashboard, Game List, Game Page, Play Board, Chat, Roster, League Profile, League Settings, Create Game, Game Roster, Stats Entry
+
+For mobile (PWA), the sidebar in the LEAGUE LAYOUT should collapse into a bottom navigation bar — a fixed bar at the bottom of the screen with icon buttons, exactly like a native mobile app. This is critical for PWA usability. The sidebar should be hidden on mobile and the bottom nav should be hidden on desktop.
+
+NAVBAR
+======
+The navbar spans the full width of every page. It should be clean white with a subtle bottom border. Left side: the DSL shield logo (small, about 32px tall) next to the text "Dodge Sports League" in a medium-weight font. Right side: navigation links.
+
+Navigation links should NOT look like buttons by default. They should look like plain text links. When hovered, a subtle rectangle (rounded corners, light grey background) appears around the link — like how Google Docs toolbar items work. No underline. No color change on hover, just the background rectangle appearing. This hover rectangle effect should apply to ALL Link components throughout the entire app, not just the navbar.
+
+The navbar must be responsive. On mobile it should collapse the right-side links into a hamburger menu or simply hide less important ones. The logo and app name always stay visible.
+
+As noted in the technical change section: do not show the current page's link in the navbar. If on /dashboard, omit the Dashboard link. If on any /league/* page, omit Join League and Create League since the user is already in a league context.
+
+LEAGUE SIDEBAR (desktop)
+========================
+This is the most important layout component in the app. Model it closely after the Claude.ai sidebar — a narrow fixed-width panel on the left side (about 240px wide) with a clean white or very light grey background and a subtle right border.
+
+The sidebar appears on ALL pages under /league/:leagueId/* including:
+- League Dashboard
+- Games list and individual game pages  
+- Play Board
+- Chat
+- Roster / League Profile
+- League Settings
+- Create Game
+- Game Roster / Stats Entry
+
+Sidebar contents (top to bottom):
+1. League name at the top in a slightly larger font, bold, with a small sport icon next to it
+2. Divider line
+3. Navigation items as icon + label buttons:
+   - Dashboard (home icon)
+   - Games (calendar icon)
+   - Chat (speech bubble icon)
+   - Roster (people icon)
+   - My Profile (person icon)
+   - Settings (gear icon, commissioner only)
+   
+Each nav item should be a full-width clickable area with an icon on the left and label text. When active (current page), show a highlighted state: orange left border accent + light orange/teal background tint. When hovered but not active, show a light grey background. Smooth transition on all hover/active states.
+
+At the bottom of the sidebar: a small section showing the current user's display name and avatar (initial letter in a colored circle if no photo).
+
+The sidebar must be scrollable independently of the main content if it gets tall.
+
+LEAGUE BOTTOM NAV (mobile/PWA)
+===============================
+On screens smaller than 768px (md breakpoint in Tailwind), hide the sidebar completely and show a fixed bottom navigation bar instead. This is how virtually every native sports app works on mobile.
+
+The bottom nav bar:
+- Fixed to the bottom of the viewport
+- Full width
+- White background with a subtle top border
+- 5-6 icon buttons evenly spaced
+- Each button: icon on top, tiny label text below
+- Active state: orange icon and label
+- Use safe-area-inset-bottom padding for iPhone notch compatibility: padding-bottom: env(safe-area-inset-bottom)
+- Height approximately 56-64px plus safe area
+
+This bottom nav replaces ALL the sidebar functionality on mobile. There should be no duplicate navigation — sidebar shows on desktop, bottom nav shows on mobile, never both.
+
+LINK HOVER RECTANGLE EFFECT (GLOBAL)
+=====================================
+Every <Link> component throughout the entire app should have this behavior: by default it looks like plain text (no underline, inherits color). On hover, a light grey rounded rectangle appears behind it as a background. The rectangle should feel like it appears instantly or with a very short 100-150ms transition. Do not change the text color or add underlines on hover. This is the Google Docs / Linear / Notion style of link interaction.
+
+Implementation: create a reusable NavLink or StyledLink component that wraps React Router's Link with the appropriate Tailwind classes, then replace all <Link> usages with this component. OR simply add consistent Tailwind classes to all existing Link usages: className="px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors duration-150"
+
+DASHBOARD PAGE
+==============
+The dashboard shows the user's leagues and entry points to create or join a league.
+
+The league list should look like a clean card grid. Each league card:
+- White background with a subtle border and shadow
+- League name prominently displayed
+- Sport type and location (city, state) below
+- Member count in a small badge
+- An orange left-side accent border to add visual interest
+- Hover state: slight shadow increase and border color shift to orange
+- Clicking the card navigates to the league
+
+The Create League and Join League actions should be displayed as two prominent buttons below or beside the league list — not buried as plain text links. Style them as filled buttons: one orange (Create), one teal outline (Join).
+
+If the user has no leagues yet, show a friendly empty state: a centered illustration area (can just be a large emoji or simple icon), a headline like "No leagues yet", and the two action buttons.
+
+LEAGUE DASHBOARD PAGE (main content area)
+==========================================
+This is what appears in the main content area when you navigate to /league/:leagueId. The sidebar handles navigation, so this page should NOT have a list of text links at the bottom. Remove all navigation links from the bottom of this page — they belong in the sidebar.
+
+What the main content should show:
+- League name as a large heading
+- Sport, location, and member count in a subtle info row
+- Invite code (commissioner only) in a styled code block with a copy button
+- A games section showing upcoming games as cards (see GAME CARDS section below)
+- A recent chat preview (last 3 messages) with a "Open Chat" button
+
+GAME CARDS AND LEAGUE CARDS — SIMILAR BUT DISTINCT
+====================================================
+Both the league list (on Dashboard) and game list (on League Dashboard and Games page) use card components. They should feel like they belong to the same design system — same border radius, same shadow style, same spacing — but have clear visual differences so the user never confuses which list they are looking at.
+
+League cards:
+- Orange left accent border (4px solid #FF6B00)
+- White card background
+- League name large, sport + location smaller below
+- Member count badge in top-right corner
+
+Game cards:
+- Teal left accent border (4px solid #008E97)
+- White card background  
+- Date large and prominent (formatted nicely e.g. "Saturday, April 19")
+- Time and location name below
+- Status badge (Upcoming / Active / Completed) with color coding: orange for upcoming, green for active, grey for completed
+- Attendance summary: "8 attending · 3 pending" in small text
+
+The left accent border color being different (orange vs teal) is the primary visual differentiator. A user's short-term memory should immediately register the color difference even if they can't consciously articulate it.
+
+PLAY BOARD PAGE — MOBILE FIX
+=============================
+The Play Board currently uses a fixed 900x520 pixel Konva canvas which is completely unusable on mobile. Fix this as follows:
+
+The Stage width and height should be dynamically calculated based on the container width. Use a ref on the wrapping div and a ResizeObserver (or window resize event listener) to get the actual available width. Set the canvas width to fill the available width and height proportionally (maintain a 16:9 or similar aspect ratio).
+
+All player token positions are stored as absolute pixel coordinates. When the canvas resizes, scale all existing positions proportionally: newX = (oldX / oldWidth) * newWidth, newY = (oldY / oldHeight) * newHeight. Update the players state with rescaled positions whenever the canvas size changes.
+
+The toolbar above the canvas should wrap onto multiple lines gracefully on mobile — use flexWrap. Button text can be shortened on mobile (use Tailwind's responsive prefixes like hidden sm:inline to hide text on small screens and show only icons).
+
+The sidebar/bottom nav should still appear on the play board page. The canvas should take up the remaining space after the toolbar.
+
+Touch events on the Konva Stage work natively — do not disable them. Dragging tokens with touch should work. The double-tap to finish a route should work on mobile (Konva fires dblclick for double-tap on touch screens).
+
+CHAT PAGE
+=========
+The chat should feel like a messaging app, not a webpage. Layout:
+- Message list takes up all available vertical space and scrolls internally (not the page)
+- Input bar fixed at the bottom of the chat area (above the bottom nav on mobile)
+- Each message: avatar circle (initial letter) on the left, sender name above the message bubble, message text in a light grey bubble, timestamp small and grey on the right
+- Your own messages: aligned to the right, teal bubble instead of grey
+- System messages (join announcements etc): centered, italicized, smaller text, no bubble
+
+The chat input area: a text input that grows with content (up to 3 lines), a send button to the right. On mobile, tapping the input should not cause the layout to break — the input should stay visible above the keyboard.
+
+FORMS (CreateGame, CreateLeague, LeagueSettings, Profile)
+==========================================================
+All forms should feel clean and minimal:
+- Labels above inputs, never placeholder-only
+- Inputs: full width, light border, rounded corners, focus state with orange ring
+- Number inputs for stats and position slots: small and inline, not full width
+- Save/Submit buttons: filled orange, right-aligned or full-width on mobile
+- The "Save" button that only appears when isDirty: animate it in with a subtle fade-in (Tailwind: transition-opacity)
+- Section headings within forms (like "Stat Weights", "Position Slots") should use a subtle grey divider line above them
+
+NEWS PAGE
+=========
+The news list should look like a clean blog index:
+- Each post as a card with title, author, date, and a short excerpt (first 150 characters of body)
+- No left accent border — news is a different context from league/game cards
+- Simple grid on desktop, single column on mobile
+
+Individual post page: centered max-width content area (like a Medium article), large title, author and date in small grey text, body text with good line-height and readable font size.
+
+LOGIN PAGE
+==========
+Simple and centered. The DSL shield logo large at the top. A tagline below. The "Continue with Google" button styled prominently — white background, Google colors for the G logo, full border, shadow. Nothing else on the page. Clean.
+
+RESPONSIVE AND PWA REQUIREMENTS
+=================================
+- Never require horizontal scroll. Use overflow-x-hidden on body/root. Use max-w-full and w-full liberally. Use min-w-0 on flex children that contain text.
+- All text should be responsive — use Tailwind's text-sm on mobile and text-base on desktop where appropriate
+- Touch targets must be at least 44x44px — all buttons and interactive elements need sufficient padding
+- The app chrome (navbar height + bottom nav height on mobile) must be accounted for in layout heights. Use 100dvh (dynamic viewport height) instead of 100vh to account for mobile browser chrome appearing/disappearing
+- Images must have max-w-full to prevent overflow
+- The embedded Google Maps iframe in game pages must be responsive: wrap it in a div with relative padding-bottom trick or use aspect-ratio: 16/9 with w-full
+- Status bar color on mobile (controlled by theme_color in manifest.json) is already set to #1a1a2e — keep this consistent with the dark navbar
+
+TYPOGRAPHY
+==========
+Use the system font stack for body text — it looks native and loads instantly:
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+
+For headings, use a slightly heavier weight (font-semibold or font-bold in Tailwind).
+
+Font sizes: never use text below 14px (text-sm) for body content. Never use text above 2xl for body headings unless it is a page title. Page titles (h1) should be text-2xl on mobile and text-3xl on desktop.
+
+COLORS REFERENCE
+=================
+Primary orange (brand):     #FF6B00  (Tailwind: use arbitrary value or extend config)
+Primary teal (brand):       #008E97
+White:                       #FFFFFF
+Near-white background:       #F9FAFB  (Tailwind: bg-gray-50)
+Light border:                #E5E7EB  (Tailwind: border-gray-200)
+Body text:                   #111827  (Tailwind: text-gray-900)
+Secondary text:              #6B7280  (Tailwind: text-gray-500)
+Active/focus ring:           #FF6B00
+
+Extend tailwind.config.js to include the brand colors:
+theme: {
+  extend: {
+    colors: {
+      brand: {
+        orange: '#FF6B00',
+        teal: '#008E97',
+      }
+    }
+  }
+}
+
+COMPONENT CREATION GUIDELINES
+==============================
+You may create the following new purely-presentational components:
+- LeagueLayout.jsx — wraps all /league/* pages with sidebar + main content structure
+- Sidebar.jsx — the league sidebar (desktop)
+- BottomNav.jsx — the league bottom nav (mobile)
+- StyledLink.jsx — the Link wrapper with hover rectangle effect
+- PageCard.jsx — reusable card with left accent border (takes accentColor prop)
+- EmptyState.jsx — centered empty state with icon, heading, description, action button
+
+Do NOT create any components that contain data fetching, Firebase calls, or business logic.
+
+WHAT NOT TO TOUCH
+==================
+- Any file in /server/
+- firebase.js
+- AuthContext.jsx (except adding className to JSX elements)
+- Any route definitions in App.jsx (except wrapping routes in LeagueLayout if needed)
+- Any handler functions (handleSave, handleSubmit, handleChange, etc.)
+- Any useEffect or useState logic
+- Any API calls (apiPost, apiGet, apiPut, apiDelete)
+- The Konva Stage logic in PlayBoard.jsx EXCEPT for making the width/height responsive as described above
+- Security rules
+- Environment variables
+- Docker/server configuration

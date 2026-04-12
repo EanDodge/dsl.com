@@ -16,6 +16,10 @@ export default function CreatePost({ docID }) {
             if (snapShot.exists()) {
                 setFormData(snapShot.data());
             }
+            else{
+                    nav("/not-found");
+                    return;
+                }
 
         }
         findDocument();

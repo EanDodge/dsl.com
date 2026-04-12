@@ -26,6 +26,10 @@ export default function CreateGame() {
             if (snap.exists()) {
                 setIsCommissioner(snap.data().commissionerId === currentUser.uid);
             }
+            else{
+                    nav("/not-found");
+                    return;
+                }
         }
         checkCommissioner();
     }, []);
@@ -54,68 +58,120 @@ export default function CreateGame() {
         }
     }
     const allFilled = formData.date !== "" && formData.time !== "" && formData.location.name !== "" && formData.numTeams !== "" && formData.numTeams > 1
-    if (!isCommissioner) return <h1>Access Denied</h1>
+    if (!isCommissioner) return <div className="flex items-center justify-center h-screen"><p className="text-red-600 font-semibold">Access Denied</p></div>
     return (
+        <div className="pt-20 pb-8 px-4 md:px-8 max-w-2xl mx-auto">
+            <h1 className="text-4xl font-bold text-gray-900 mb-8">Create Game</h1>
 
-
-        <div>
-            <h1>Create Your Game</h1>
-            <h3>When is your game?</h3>
-            <input
-                name="date"
-                type="date"
-                value={formData.date}
-                onChange={handleChange} />
-            <input
-                name="time"
-                type="time"
-                value={formData.time}
-                onChange={handleChange} />
-            <h3>Where are you playing?</h3>
-            <input
-                name="name"
-                placeholder="FieldName"
-                data-group="location"
-                value={formData.location.name}
-                onChange={handleChange}
-            />
-            <textarea
-                name="embeddedMap"
-                data-group="location"
-                placeholder="Paste Google Maps embed code here"
-                value={formData.location.embeddedMap}
-                onChange={handleChange}
-                rows="4"
-            />
-
-            <h3>Team Information</h3>
-            <h4>Number of Teams</h4>
-            <input
-                type="number"
-                name="numTeams"
-                value={formData.numTeams}
-                onChange={handleChange}
-            />
-            <h4>Position Slots</h4>
-            <div>
-                <h3>Position Slots Per Team</h3>
-                {["QB", "RB", "WR", "TE", "C"].map((pos) => (
-                    <div key={pos}>
-                        <label>{pos}</label>
-                        <input
-                            type="number"
-                            name={pos}
-                            data-group="positionSlots"
-                            value={formData.positionSlots[pos]}
-                            onChange={handleChange}
-                            min="0"
-                            max="5"
-                        />
+            <form className="space-y-8">
+                {/* Date and Time */}
+                <div>
+                    <h3 className="text-sm font-medium text-gray-900 mb-3 pb-3 border-b border-gray-200">When is your game?</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-2">Date</label>
+                            <input
+                                name="date"
+                                type="date"
+                                value={formData.date}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-2">Time</label>
+                            <input
+                                name="time"
+                                type="time"
+                                value={formData.time}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                            />
+                        </div>
                     </div>
-                ))}
-            </div>
-            {allFilled && <button onClick={handleCreateGame}>Create</button>}
+                </div>
 
+                {/* Location */}
+                <div>
+                    <h3 className="text-sm font-medium text-gray-900 mb-3 pb-3 border-b border-gray-200">Where are you playing?</h3>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-2">Location Name</label>
+                            <input
+                                name="name"
+                                placeholder="e.g., Central Park Field"
+                                data-group="location"
+                                value={formData.location.name}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-2">Google Maps Embed Code</label>
+                            <textarea
+                                name="embeddedMap"
+                                data-group="location"
+                                placeholder="Paste Google Maps embed iframe here"
+                                value={formData.location.embeddedMap}
+                                onChange={handleChange}
+                                rows="4"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 resize-none font-mono text-xs" style={{ "--tw-ring-color": "#FF6B00" }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Teams */}
+                <div>
+                    <h3 className="text-sm font-medium text-gray-900 mb-3 pb-3 border-b border-gray-200">Team Information</h3>
+                    <div className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-2">Number of Teams</label>
+                            <input
+                                type="number"
+                                name="numTeams"
+                                value={formData.numTeams}
+                                onChange={handleChange}
+                                min="2"
+                                max="10"
+                                className="w-24 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-900 mb-3">Position Slots per Team</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                {["QB", "RB", "WR", "TE", "C"].map((pos) => (
+                                    <div key={pos} className="flex flex-col">
+                                        <label className="text-xs font-semibold text-gray-700 mb-1">{pos}</label>
+                                        <input
+                                            type="number"
+                                            name={pos}
+                                            data-group="positionSlots"
+                                            value={formData.positionSlots[pos]}
+                                            onChange={handleChange}
+                                            min="0"
+                                            max="5"
+                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-center text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Submit */}
+                {allFilled && (
+                    <button
+                        type="button"
+                        onClick={handleCreateGame}
+                        className="w-full btn-primary transition-opacity opacity-100 animate-fadeIn"
+                    >
+                        Create Game
+                    </button>
+                )}
+            </form>
         </div>
     )
 }

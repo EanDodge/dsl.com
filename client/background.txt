@@ -1,0 +1,228 @@
+PROJECT BACKGROUND — DODGE SPORTS LEAGUE (DSL)
+===============================================
+For use with GitHub Copilot Agent in VS Code
+
+WHAT THIS PROJECT IS
+=====================
+Dodge Sports League (DSL) is a full-stack web application for managing a recreational sports league. The league has been running since 2015 as an informal group of friends playing football and other sports. This app replaces spreadsheets, group texts, and word-of-mouth with a proper management platform.
+
+The app is built as a Progressive Web App (PWA) — it can be installed directly to a phone's home screen from the browser with no App Store involvement. It must work on desktop and mobile equally well.
+
+WHO USES IT
+============
+- Commissioner (Ean Dodge): the person who runs the league, creates games, builds teams, manages everything
+- Players: people who show up to play, mark their attendance, set their positions
+- Managers: app-level administrators who can post news and manage app content
+- Guests: people who visit the public-facing pages (About, News) without an account
+
+All accounts are Google accounts — there are no passwords. Users sign in with their Google account via Firebase Authentication.
+
+TECH STACK
+===========
+Frontend:
+- React 18 with Vite (build tool)
+- React Router v6 (client-side routing)
+- Firebase JS SDK (Firestore database, Auth, Hosting)
+- react-konva / konva (HTML5 canvas for the Play Board feature)
+- Tailwind CSS (to be styled — currently unstyled)
+
+Backend:
+- Node.js + Express server
+- Firebase Admin SDK
+- Deployed in a Docker container on a Hetzner VPS
+- Traefik as reverse proxy with automatic SSL via Let's Encrypt
+- Hosted at api.dodgesportsleague.duckdns.org
+
+Database:
+- Firebase Firestore (NoSQL)
+- Firebase Authentication for user identity
+
+Hosting:
+- React app: Firebase Hosting at dodgesportsleague.web.app
+- Node API: Hetzner VPS (Linux, Docker)
+
+PROJECT STRUCTURE
+==================
+dsl.com/
+  client/                    ← React app (this is what you are styling)
+    src/
+      pages/
+        Login.jsx             ← Google sign-in page
+        Dashboard.jsx         ← User's home page showing their leagues
+        Profile.jsx           ← Global user profile editor
+        About.jsx             ← Public about page
+        News.jsx              ← Public news/blog list
+        ShowPost.jsx          ← Individual news post
+        CreatePost.jsx        ← Commissioner creates/edits news posts
+        EditPost.jsx          ← Wrapper for CreatePost with post ID
+        GetPost.jsx           ← Wrapper for ShowPost with post ID
+        CreateLeague.jsx      ← Form to create a new league
+        JoinLeague.jsx        ← Join via invite code or URL
+        LeagueDashboard.jsx   ← Main league hub page
+        LeagueProfile.jsx     ← Player's profile within a specific league
+        LeagueSettings.jsx    ← Commissioner settings (stat weights etc)
+        Chat.jsx              ← Real-time league chat
+        GamePage.jsx          ← Individual game: attendance, teams, map
+        CreateGame.jsx        ← Commissioner creates a game
+        GameRoster.jsx        ← Commissioner enters post-game stats
+        PlayBoard.jsx         ← Interactive canvas for drawing plays
+        NotFound.jsx          ← 404 page
+      components/
+        Navbar.jsx            ← Top navigation bar (appears on all pages)
+        ProtectedRoute.jsx    ← Redirects to login if not authenticated
+        ManagerRoute.jsx      ← Redirects if not a Manager role
+      context/
+        AuthContext.jsx       ← Provides currentUser and userProfile everywhere
+      firebase.js             ← Firebase SDK initialization
+      api.js                  ← Helper functions for calling the Node API
+      App.jsx                 ← Route definitions
+      main.jsx                ← React root, wraps app in providers
+    public/
+      icons/
+        icon-192.png          ← PWA home screen icon
+        icon-512.png          ← PWA splash screen icon
+      field.png               ← Football field background for Play Board
+    vite.config.js            ← Vite + PWA plugin configuration
+  server/                     ← Node.js API (DO NOT TOUCH)
+
+KEY FEATURES
+=============
+
+1. AUTHENTICATION
+   Every user signs in with their Google account. On first login, a profile
+   document is automatically created in Firestore. The AuthContext provides
+   currentUser (Firebase Auth object) and userProfile (Firestore document)
+   to every component via React Context.
+
+2. LEAGUES
+   Any logged-in user can create a league. The creator becomes the commissioner.
+   Leagues have a name, sport type, location, and an invite code. Sharing the
+   invite link (e.g. dodgesportsleague.web.app/league/join?code=ABC123) lets
+   others join. The commissioner can assign captains.
+
+3. GAMES
+   Commissioners create games with a date, time, location (name + Google Maps
+   embed code), number of teams, and position slots per team (QB, RB, WR, TE, C).
+   All league members are automatically added to the attendance list as "pending".
+   Members and commissioners can change attendance to "attending" or "not attending".
+
+4. TEAM BUILDER
+   After attendance is set, the commissioner clicks "Build Teams". The server
+   runs a snake-draft algorithm that assigns players to teams based on their
+   position preferences and overall ratings. The algorithm accounts for:
+   - Primary position (full overall rating)
+   - Secondary position (overall - 5)
+   - Tertiary position (overall - 8)
+   - Out of position (overall - 10)
+   Teams are written back to the game document and appear instantly for all users.
+
+5. STATS AND OVERALL RATING
+   After each game, commissioners enter stats for each attending player:
+   passing TDs, rushing TDs, receiving TDs, defensive TDs, defensive turnovers,
+   offensive turnovers, and MVP (boolean). Attendance is tracked automatically.
+   The server calculates each player's contribution for the game and adds it to
+   their cumulative overall rating (base 60, capped 40-99). Stat weights are
+   configurable per league by the commissioner in League Settings.
+
+6. PLAY BOARD
+   An interactive canvas (react-konva) where coaches draw plays. Players from
+   the current game's attendance appear as colored tokens (Team 1 = red, Team 2
+   = blue). Tokens can be dragged around the field. Routes can be drawn by
+   selecting a player, clicking "Draw Route", clicking points on the field, and
+   double-clicking to finish. Plays can be saved to Firestore and reloaded.
+
+7. CHAT
+   Real-time league chat powered by Firestore onSnapshot listeners. Messages
+   appear instantly for all connected users. No server involvement — writes go
+   directly from browser to Firestore.
+
+8. NEWS/BLOG
+   Public-facing news page. Anyone can read. Only Managers (app-level role, not
+   league commissioner) can create or edit posts. Posts support a title and body.
+
+USER ROLES
+===========
+Global roles (stored in /users/{uid} in Firestore):
+- "Player" — default for all new users
+- "Manager" — can post news, access app-level admin features
+
+League-level roles (stored in the league document):
+- commissionerId — the UID of the user who created the league
+- captainUids — array of UIDs of designated captains
+- memberUids — array of all member UIDs
+
+A user can be commissioner of one league and a regular player in another.
+Role checks happen both in Firestore Security Rules and in React components.
+
+DATA FLOW
+==========
+Most reads and writes happen directly between the React app and Firestore.
+The Node.js server (API) is only used for operations that require elevated
+privileges or tamper-proof logic:
+- Creating a league (generates secure invite code)
+- Joining a league (validates invite code)
+- Building teams (runs algorithm, writes results)
+- Submitting game stats (calculates overalls, updates player documents)
+- Clearing game stats (recalculates from full game history)
+
+The API requires a Firebase ID token in the Authorization header of every
+request. The server verifies this token using Firebase Admin SDK.
+
+FIRESTORE DATA MODEL SUMMARY
+==============================
+/users/{uid}
+  uid, displayName, email, photoURL, bio, role, leagueIds[], createdAt
+
+/leagues/{leagueId}
+  name, sport, location{city,state}, commissionerId, inviteCode,
+  memberUids[], captainUids[], createdAt, statWeights{}
+
+/leagues/{leagueId}/players/{uid}
+  uid, displayName, position1, position2, position3, overall, teamId, status
+
+/leagues/{leagueId}/games/{gameId}
+  date, time, location{name,embeddedMap}, numTeams, positionSlots{},
+  status, attendance{uid:status}, teams[], playerStats{uid:stats{}},
+  commissionerId, createdAt
+
+/leagues/{leagueId}/chat/{messageId}
+  senderUid, senderName, text, timestamp, type
+
+/leagues/{leagueId}/plays/{playId}
+  name, players[], routes[], createdBy, createdAt
+
+/leagues/{leagueId}/plays/{playId}
+  name, players[{uid,x,y,teamIndex}], routes[], createdBy, createdAt
+
+/news/{postId}
+  title, body, authorName, publishedAt, tags[]
+
+IMPORTANT CONTEXT FOR STYLING
+===============================
+- The app currently has NO CSS styling whatsoever beyond inline styles in
+  PlayBoard.jsx (the dark background there is intentional, keep it).
+- All pages are functional but completely unstyled — raw HTML elements.
+- Tailwind CSS needs to be installed and configured if not already present.
+- The brand colors are neon orange (#FF6B00) and teal (#008E97).
+- The shield logo files are at client/public/icons/icon-512.png and icon-192.png
+- The app is already configured as a PWA via vite-plugin-pwa in vite.config.js
+- The manifest theme_color is #1a1a2e (dark navy)
+- Google Sign-In is the only authentication method — no password forms needed
+- Real users of this app are recreational athletes aged roughly 18-40
+- The commissioner (primary power user) will use this on both desktop and phone
+- Chat, attendance marking, and checking game results are the highest-frequency
+  mobile use cases
+- Team building and stats entry are primarily desktop use cases
+
+KNOWN ISSUES TO ALSO FIX (purely CSS/layout, no logic changes)
+===============================================================
+- Long text in league names, player names, or news titles overflows horizontally
+  on mobile — fix with proper text truncation or wrapping
+- The Google Maps iframe in GamePage.jsx has a fixed width that overflows on
+  mobile — make it responsive
+- The PlayBoard canvas is fixed at 900x520px — make it responsive to container
+  width (this requires a small logic change to read container size, which IS
+  permitted as an exception since it is purely presentational behavior)
+- Some pages have long lists of <Link> components stacked vertically with no
+  visual treatment — these should be replaced with the styled sidebar navigation
+  or removed from page bodies entirely

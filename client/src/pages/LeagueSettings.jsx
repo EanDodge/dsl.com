@@ -47,6 +47,10 @@ export default function LeagueSettings() {
                 else
                     await updateDoc(doc(db, "leagues", leagueId), { statWeights });
             }
+            else{
+                    nav("/not-found");
+                    return;
+                }
         }
         getStats();
     }, []);

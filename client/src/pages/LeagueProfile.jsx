@@ -18,6 +18,10 @@ export default function LeagueProfile() {
                 setProfileData(userSnap.data());
                 setFormData(userSnap.data());
             }
+            else{
+                    nav("/not-found");
+                    return;
+                }
         }
         fetchProfile();
     }, []);
