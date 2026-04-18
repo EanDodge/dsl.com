@@ -75,6 +75,7 @@ export default function PlayBoard() {
     const [savedPlays, setSavedPlays] = useState([]);
     const [playName, setPlayName] = useState("");
     const [saveStatus, setSaveStatus] = useState(""); // feedback message
+    const [saveLoading, setSaveLoading] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
     // ── Initial positions for reset ──
@@ -346,10 +347,12 @@ export default function PlayBoard() {
 
     // ─── Save play to Firestore ───────────────────────────────────────────────
     const handleSavePlay = async () => {
+        if (saveLoading) return;
         if (!playName.trim()) {
             setSaveStatus("Please enter a play name.");
             return;
         }
+        setSaveLoading(true);
         try {
             await addDoc(collection(db, "leagues", leagueId, "plays"), {
                 name: playName.trim(),
@@ -361,13 +364,16 @@ export default function PlayBoard() {
                 createdByName: userProfile?.displayName || "Unknown",
                 createdAt: serverTimestamp(),
             });
+            const savedName = playName.trim();
             setPlayName("");
-            setSaveStatus(`"${playName.trim()}" saved!`);
+            setSaveStatus(`"${savedName}" saved!`);
             await loadSavedPlays();
             setTimeout(() => setSaveStatus(""), 3000);
         } catch (err) {
             console.error("Save failed:", err);
             setSaveStatus("Save failed. Try again.");
+        } finally {
+            setSaveLoading(false);
         }
     };
 
@@ -562,14 +568,20 @@ export default function PlayBoard() {
                         placeholder="Play name..."
                         value={playName}
                         onChange={(e) => setPlayName(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleSavePlay()}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                if (!saveLoading) handleSavePlay();
+                            }
+                        }}
                         style={{ padding: "6px 8px", borderRadius: "4px", border: "1px solid #555", background: "#2a2a3e", color: "#eee", flex: 1, minWidth: "100px", fontSize: "12px" }}
                     />
                     <button
                         onClick={handleSavePlay}
-                        style={{ padding: "6px 12px", background: "#8e44ad", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "12px", whiteSpace: "nowrap" }}
+                        disabled={saveLoading}
+                        style={{ padding: "6px 12px", background: saveLoading ? "#6f3c7d" : "#8e44ad", color: "#fff", border: "none", borderRadius: "4px", cursor: saveLoading ? "not-allowed" : "pointer", fontSize: "12px", whiteSpace: "nowrap", opacity: saveLoading ? 0.65 : 1 }}
                     >
-                        💾 Save
+                        {saveLoading ? 'Saving...' : '💾 Save'}
                     </button>
                 </div>
             )}

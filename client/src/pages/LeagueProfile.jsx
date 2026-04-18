@@ -11,6 +11,8 @@ export default function LeagueProfile() {
     const nav = useNavigate();
     const [profileData, setProfileData] = useState(null);
     const [formData, setFormData] = useState({});
+    const [saving, setSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState("");
     useEffect(() => {
         const fetchProfile = async () => {
             const userSnap = await getDoc(doc(db, "leagues", leagueId, "players", currentUser.uid));
@@ -32,13 +34,24 @@ export default function LeagueProfile() {
         setFormData({ ...formData, [e.target.name]: e.target.value })
     }
     const handleSave = async () => {
-        await updateDoc(doc(db, "leagues", leagueId, "players", currentUser.uid), {
-            displayName: formData.displayName,
-            position1: formData.position1,
-            position2: formData.position2,
-            position3: formData.position3
-        });
-        setProfileData(formData);
+        if (saving) return;
+        setSaving(true);
+        try {
+            await updateDoc(doc(db, "leagues", leagueId, "players", currentUser.uid), {
+                displayName: formData.displayName,
+                position1: formData.position1,
+                position2: formData.position2,
+                position3: formData.position3
+            });
+            setProfileData(formData);
+            setSaveStatus("Profile saved.");
+        } catch (err) {
+            console.error(err);
+            setSaveStatus("Save failed. Please try again.");
+        } finally {
+            setSaving(false);
+            setTimeout(() => setSaveStatus(""), 3000);
+        }
     }
     if (loading) return <div className="flex items-center justify-center h-screen"><p className="text-gray-500">Loading...</p></div>
     if (!profileData) return <div className="flex items-center justify-center h-screen"><p className="text-gray-500">Loading...</p></div>
@@ -126,13 +139,19 @@ export default function LeagueProfile() {
                     </div>
                 </div>
 
+                {saveStatus && (
+                    <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                        {saveStatus}
+                    </p>
+                )}
                 {isDirty && (
                     <button
                         type="button"
                         onClick={handleSave}
-                        className="w-full btn-primary transition-opacity opacity-100 animate-fadeIn"
+                        disabled={saving}
+                        className={`w-full btn-primary transition-opacity opacity-100 animate-fadeIn ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        Save Profile
+                        {saving ? 'Saving...' : 'Save Profile'}
                     </button>
                 )}
             </form>

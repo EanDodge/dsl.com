@@ -24,10 +24,10 @@ export default function Chat() {
             }
         );
         return unsubscribe;
-    }, []);
+    }, [leagueId]);
 
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, [messages]);
 
     // 3. send a message
@@ -58,15 +58,19 @@ export default function Chat() {
         <div className="flex flex-col h-screen overflow-hidden pt-16 pb-20 md:pb-0">
             {/* Messages area */}
             <div
-                className="flex-1 overflow-y-auto px-4 py-4"
+                className="flex-1 overflow-y-auto px-4 py-4 pb-28"
                 style={{ touchAction: 'pan-y', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
             >
                 <div className="max-w-4xl mx-auto space-y-4">
                     {messages.length === 0 ? (
                         <p className="text-center text-gray-500 py-8">No messages yet. Start the conversation!</p>
                     ) : (
-                        messages.map((message) => (
-                            <div key={message.id} className={`flex ${message.senderUid === currentUser?.uid ? 'justify-end' : 'justify-start'}`}>
+                        messages.map((message, index) => (
+                            <div
+                                key={message.id}
+                                ref={index === messages.length - 1 ? bottomRef : undefined}
+                                className={`flex ${message.senderUid === currentUser?.uid ? 'justify-end' : 'justify-start'}`}
+                            >
                                 <div className={`max-w-xs ${message.senderUid === currentUser?.uid ? 'bg-[#008E97] text-white' : 'bg-gray-100 text-gray-900'} rounded-lg px-4 py-2`}>
                                     {message.senderUid !== currentUser?.uid && (
                                         <p className="text-xs font-semibold text-gray-600 mb-1">{message.senderName}</p>
@@ -79,7 +83,6 @@ export default function Chat() {
                             </div>
                         ))
                     )}
-                    <div ref={bottomRef} />
                 </div>
             </div>
 
