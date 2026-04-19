@@ -33,6 +33,18 @@ export default function LeagueProfile() {
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value })
     }
+
+    const handlePositionChange = async (e) => {
+        const { name, value } = e.target;
+        const newData = { ...formData, [name]: value };
+        setFormData(newData);
+        try {
+            await updateDoc(doc(db, "leagues", leagueId, "players", currentUser.uid), { [name]: value });
+            setProfileData(newData);
+        } catch (error) {
+            console.error(error);
+        }
+    }
     const handleSave = async () => {
         if (saving) return;
         setSaving(true);
@@ -91,7 +103,7 @@ export default function LeagueProfile() {
                             <select
                                 name="position1"
                                 value={formData.position1}
-                                onChange={handleChange}
+                                onChange={handlePositionChange}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
                             >
                                 <option value="">-- Select --</option>
@@ -105,7 +117,7 @@ export default function LeagueProfile() {
                             <select
                                 name="position2"
                                 value={formData.position2}
-                                onChange={handleChange}
+                                onChange={handlePositionChange}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
                             >
                                 <option value="">-- Select --</option>
@@ -119,7 +131,7 @@ export default function LeagueProfile() {
                             <select
                                 name="position3"
                                 value={formData.position3}
-                                onChange={handleChange}
+                                onChange={handlePositionChange}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
                             >
                                 <option value="">-- Select --</option>

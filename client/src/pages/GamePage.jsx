@@ -17,14 +17,21 @@ export default function GamePage() {
     const [isMobile, setIsMobile] = useState(false);
     const nav = useNavigate();
     useEffect(() => {
+        if (!currentUser) return;
         const fetchMembers = async () => {
             const userSnap = await getDoc(doc(db, "leagues", leagueId));
             if (userSnap.exists()) {
+                const leagueData = userSnap.data();
+                // Check if current user is a member of the league
+                if (!leagueData.memberUids.includes(currentUser.uid)) {
+                    nav("/not-found");
+                    return;
+                }
                 const memberDocs = await Promise.all(
-                    userSnap.data().memberUids.map(uid =>
+                    leagueData.memberUids.map(uid =>
                         getDoc(doc(db, "leagues", leagueId, "players", uid))
                     )
-                ); setMembers(memberDocs.map(d => d.data()));
+                ); setMembers(memberDocs.map(d => d.data()).filter(m => m));
             }
             else{
                     nav("/not-found");
@@ -32,7 +39,7 @@ export default function GamePage() {
                 }
         }
         fetchMembers();
-    }, []);
+    }, [currentUser, leagueId]);
 
     useEffect(() => {
         const mq = window.matchMedia("(max-width: 768px)");

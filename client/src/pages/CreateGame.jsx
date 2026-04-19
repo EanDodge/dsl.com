@@ -1,7 +1,7 @@
 import { useAuth } from "../context/AuthContext"
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { apiPost } from "../api"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { apiPost, apiPut } from "../api"
 import { doc, getDoc } from "firebase/firestore"
 import { db } from "../firebase"
 
@@ -11,6 +11,8 @@ export default function CreateGame() {
     const { currentUser } = useAuth();
     const { leagueId } = useParams();
     const nav = useNavigate();
+    const [searchParams] = useSearchParams();
+    const editGameId = searchParams.get('edit');
     const [formData, setFormData] = useState({
         date: "",
         time: "",
@@ -19,6 +21,7 @@ export default function CreateGame() {
         positionSlots: { QB: 1, RB: 1, WR: 2, TE: 1, C: 1 }
     });
     const [isCommissioner, setIsCommissioner] = useState(false);
+    const [isEdit, setIsEdit] = useState(false);
 
     useEffect(() => {
         const checkCommissioner = async () => {
@@ -34,12 +37,36 @@ export default function CreateGame() {
         checkCommissioner();
     }, []);
 
-    const handleCreateGame = async () => {
+    useEffect(() => {
+        if (editGameId) {
+            const fetchGame = async () => {
+                const gameDoc = await getDoc(doc(db, 'leagues', leagueId, 'games', editGameId));
+                if (gameDoc.exists()) {
+                    const data = gameDoc.data();
+                    setFormData({
+                        date: data.date,
+                        time: data.time,
+                        location: data.location,
+                        numTeams: data.numTeams,
+                        positionSlots: data.positionSlots
+                    });
+                    setIsEdit(true);
+                }
+            };
+            fetchGame();
+        }
+    }, [editGameId]);
+
+    const handleSubmit = async () => {
         try {
             const token = await currentUser.getIdToken();
-            const result = await apiPost(`/api/leagues/${leagueId}/games`, formData, token);
-            console.log(result);
-            nav(`/league/${leagueId}/games/${result.gameId}`)
+            if (isEdit) {
+                await apiPut(`/api/leagues/${leagueId}/games/${editGameId}`, formData, token);
+                nav(`/league/${leagueId}/games/${editGameId}`);
+            } else {
+                const result = await apiPost(`/api/leagues/${leagueId}/games`, formData, token);
+                nav(`/league/${leagueId}/games/${result.gameId}`);
+            }
         } catch (error) {
             console.log(error);
         }
@@ -61,7 +88,7 @@ export default function CreateGame() {
     if (!isCommissioner) return <div className="flex items-center justify-center h-screen"><p className="text-red-600 font-semibold">Access Denied</p></div>
     return (
         <div className="pt-20 pb-8 px-4 md:px-8 max-w-2xl mx-auto">
-            <h1 className="text-4xl font-bold text-gray-900 mb-8">Create Game</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-8">{isEdit ? 'Edit Game' : 'Create Game'}</h1>
 
             <form className="space-y-8">
                 {/* Date and Time */}
@@ -165,10 +192,10 @@ export default function CreateGame() {
                 {allFilled && (
                     <button
                         type="button"
-                        onClick={handleCreateGame}
+                        onClick={handleSubmit}
                         className="w-full btn-primary transition-opacity opacity-100 animate-fadeIn"
                     >
-                        Create Game
+                        {isEdit ? 'Update Game' : 'Create Game'}
                     </button>
                 )}
             </form>

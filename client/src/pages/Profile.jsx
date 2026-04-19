@@ -1,7 +1,8 @@
-import { doc, getDoc, updateDoc } from "firebase/firestore"
-import { db } from "../firebase"
+import { doc, getDoc, updateDoc, arrayRemove, deleteDoc } from "firebase/firestore"
+import { auth, db } from "../firebase"
 import { useAuth } from "../context/AuthContext"
 import { useEffect, useState } from "react"
+import { signOut } from "firebase/auth"
 
 
 export default function Profile(){
@@ -46,6 +47,25 @@ export default function Profile(){
             setTimeout(() => setSaveStatus(""), 3000);
         }
     }
+
+    const handleDeleteAccount = async () => {
+        if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
+        try {
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            const leagueIds = userDoc.data().leagueIds || [];
+            for (const lid of leagueIds) {
+                await updateDoc(doc(db, 'leagues', lid), {
+                    memberUids: arrayRemove(currentUser.uid)
+                });
+                await deleteDoc(doc(db, 'leagues', lid, 'players', currentUser.uid));
+            }
+            await deleteDoc(doc(db, 'users', currentUser.uid));
+            await signOut(auth);
+            window.location.href = '/login';
+        } catch (error) {
+            console.error(error);
+        }
+    };
     if (!profileData) return <div className="flex items-center justify-center h-screen"><p className="text-gray-500">Loading...</p></div>
 
     return(
@@ -106,6 +126,10 @@ export default function Profile(){
                     </button>
                 )}
             </form>
+
+            <div className="border-t pt-8">
+                <button onClick={handleDeleteAccount} className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete Account</button>
+            </div>
         </div>
     )
 }

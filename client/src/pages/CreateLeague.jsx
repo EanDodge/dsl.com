@@ -1,20 +1,48 @@
 import { useAuth } from "../context/AuthContext"
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { apiPost } from "../api"
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { apiPost, apiPut } from "../api"
+import { doc, getDoc } from "firebase/firestore"
+import { db } from "../firebase"
 
 export default function CreateLeague() {
     const { currentUser } = useAuth();
     const nav = useNavigate();
+    const [searchParams] = useSearchParams();
+    const editLeagueId = searchParams.get('edit');
     const [formData, setFormData] = useState({ name: "", sport: "", location: { city: "", state: "" } });
     const [inviteCode, setInviteCode] = useState(null);
-    const handleCreateLeague = async () => {
+    const [isEdit, setIsEdit] = useState(false);
+
+    useEffect(() => {
+        if (editLeagueId) {
+            const fetchLeague = async () => {
+                const leagueDoc = await getDoc(doc(db, 'leagues', editLeagueId));
+                if (leagueDoc.exists()) {
+                    const data = leagueDoc.data();
+                    setFormData({
+                        name: data.name,
+                        sport: data.sport,
+                        location: data.location
+                    });
+                    setIsEdit(true);
+                }
+            };
+            fetchLeague();
+        }
+    }, [editLeagueId]);
+
+    const handleSubmit = async () => {
         try {
             const token = await currentUser.getIdToken();
-            const result = await apiPost("/api/leagues", formData, token);
-            console.log(result);
-            setInviteCode(result.inviteCode);
-            nav(`/league/${result.leagueId}`)
+            if (isEdit) {
+                await apiPut(`/api/leagues/${editLeagueId}`, formData, token);
+                nav(`/league/${editLeagueId}`);
+            } else {
+                const result = await apiPost("/api/leagues", formData, token);
+                setInviteCode(result.inviteCode);
+                nav(`/league/${result.leagueId}`);
+            }
         } catch (error) {
             console.log(error);
         }
@@ -35,7 +63,7 @@ export default function CreateLeague() {
     const allFilled = formData.name !== "" && formData.sport !== "" && formData.location.city !== "" && formData.location.state !== ""
     return (
         <div className="pt-20 pb-8 px-4 md:px-8 max-w-2xl mx-auto">
-            <h1 className="text-4xl font-bold text-gray-900 mb-8">Create Your League</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-8">{isEdit ? 'Edit League' : 'Create Your League'}</h1>
 
             <form className="space-y-8">
                 {/* League Name */}
@@ -98,10 +126,10 @@ export default function CreateLeague() {
                 {allFilled && (
                     <button
                         type="button"
-                        onClick={handleCreateLeague}
+                        onClick={handleSubmit}
                         className="w-full btn-primary transition-opacity opacity-100 animate-fadeIn"
                     >
-                        Create League
+                        {isEdit ? 'Update League' : 'Create League'}
                     </button>
                 )}
             </form>

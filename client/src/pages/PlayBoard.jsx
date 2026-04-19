@@ -12,6 +12,7 @@ import {
     doc,
     getDoc,
     serverTimestamp,
+    deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -378,6 +379,20 @@ export default function PlayBoard() {
     };
 
     // ─── Load a saved play ────────────────────────────────────────────────────
+    const handleDeletePlay = async (playId) => {
+        if (!window.confirm("Delete this play?")) return;
+        try {
+            await deleteDoc(doc(db, "leagues", leagueId, "plays", playId));
+            setSavedPlays((prev) => prev.filter((play) => play.id !== playId));
+            setSaveStatus("Play deleted.");
+            setTimeout(() => setSaveStatus(""), 3000);
+        } catch (err) {
+            console.error("Delete failed:", err);
+            setSaveStatus("Could not delete play.");
+            setTimeout(() => setSaveStatus(""), 3000);
+        }
+    };
+
     const handleLoadPlay = (play) => {
         const sourceWidth = play.canvasWidth || CANVAS_WIDTH;
         const sourceHeight = play.canvasHeight || CANVAS_HEIGHT;
@@ -605,25 +620,46 @@ export default function PlayBoard() {
 
             {/* ── Saved Plays List ── */}
             {savedPlays.length > 0 && (
-                <div style={{ marginBottom: "8px", display: "flex", flexWrap: "wrap", gap: "4px", maxWidth: "100%" }}>
-                    <span style={{ color: "#aaa", fontSize: "11px", alignSelf: "center" }}>Load:</span>
-                    {savedPlays.map((play) => (
-                        <button
-                            key={play.id}
-                            onClick={() => handleLoadPlay(play)}
-                            style={{
-                                padding: "4px 10px",
-                                background: "#2a2a3e",
-                                color: "#f0c040",
-                                border: "1px solid #444",
-                                borderRadius: "4px",
-                                cursor: "pointer",
-                                fontSize: "13px",
-                            }}
-                        >
-                            {play.name}
-                        </button>
-                    ))}
+                <div style={{ marginBottom: "8px", display: "flex", flexDirection: "column", gap: "6px", maxWidth: "100%" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                        <span style={{ color: "#aaa", fontSize: "11px" }}>Saved plays:</span>
+                        {savedPlays.map((play) => (
+                            <button
+                                key={play.id}
+                                onClick={() => handleLoadPlay(play)}
+                                style={{
+                                    padding: "4px 10px",
+                                    background: "#2a2a3e",
+                                    color: "#f0c040",
+                                    border: "1px solid #444",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                    fontSize: "13px",
+                                }}
+                            >
+                                {play.name}
+                            </button>
+                        ))}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        {savedPlays.map((play) => (
+                            <button
+                                key={`delete_${play.id}`}
+                                onClick={() => handleDeletePlay(play.id)}
+                                style={{
+                                    padding: "4px 10px",
+                                    background: "#c0392b",
+                                    color: "#fff",
+                                    border: "1px solid #922b21",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                    fontSize: "13px",
+                                }}
+                            >
+                                Delete {play.name}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
 
