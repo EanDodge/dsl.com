@@ -87,7 +87,7 @@ export default function Chat() {
             </div>
 
             {/* Input area */}
-            <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 max-w-full">
+            <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 max-w-full chat-input">
                 <div className="max-w-4xl mx-auto flex gap-3">
                     <textarea
                         placeholder="Type a message..."

@@ -181,6 +181,12 @@ export default function GamePage() {
                             Build Teams
                         </button>
                     )}
+                    {
+                        gameTeams?.length && (
+                        <button onClick={handleBuildTeams} className="btn-primary">
+                            Re-Build Teams
+                        </button>
+                    )}
                     <Link to={`roster`} className="btn-primary text-center">
                         Enter Stats
                     </Link>

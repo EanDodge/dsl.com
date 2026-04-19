@@ -43,4 +43,10 @@
   .link-hover {
     @apply px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors duration-150;
   }
+
+  .chat-input {
+    @media (max-width: 767px) {
+      bottom: calc(5rem + env(safe-area-inset-bottom));
+    }
+  }
 }
