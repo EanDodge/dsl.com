@@ -59,7 +59,7 @@ export default function Chat() {
             {/* Messages area */}
             <div
                 className="flex-1 overflow-y-auto px-4 py-4 pb-28"
-                style={{ touchAction: 'pan-y', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
+                style={{ touchAction: 'pan-y', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', paddingBottom: 'calc(7rem + env(safe-area-inset-bottom))' }}
             >
                 <div className="max-w-4xl mx-auto space-y-4">
                     {messages.length === 0 ? (
@@ -87,7 +87,7 @@ export default function Chat() {
             </div>
 
             {/* Input area */}
-            <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 max-w-full chat-input">
+            <div className="fixed md:bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 max-w-full" style={{ bottom: 'calc(56px + env(safe-area-inset-bottom))' }}>
                 <div className="max-w-4xl mx-auto flex gap-3">
                     <textarea
                         placeholder="Type a message..."
