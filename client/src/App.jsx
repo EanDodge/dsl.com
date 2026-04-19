@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { useRegisterSW } from "virtual:pwa-register/react"
 import { Routes, Route, Navigate, Link } from "react-router-dom"
 import Login from "./pages/Login"
 import ProtectedRoute from "./components/ProtectedRoute"
@@ -28,6 +29,18 @@ import LeagueLayout from "./components/LeagueLayout"
 
 export default function App() {
   const { currentUser } = useAuth();
+  const { needRefresh, updateServiceWorker } = useRegisterSW({
+    onRegistered(r) {
+      if (!r) return;
+      setInterval(() => r.update(), 60 * 60 * 1000);
+    },
+  });
+
+  useEffect(() => {
+    if (needRefresh) {
+      updateServiceWorker(true);
+    }
+  }, [needRefresh, updateServiceWorker]);
 
   useEffect(() => {
     const setViewportHeight = () => {
