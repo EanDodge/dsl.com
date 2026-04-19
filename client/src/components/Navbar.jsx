@@ -28,7 +28,7 @@ export default function Navbar() {
     }
 
     return (
-        <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
+        <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             <div className="flex items-center justify-between h-16 px-4 md:px-6 max-w-full">
                 {/* Logo and app name */}
                 <Link to="/" className="flex items-center gap-3 hover:bg-transparent">

@@ -25,7 +25,7 @@ export default function Login() {
     }
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-white px-4">
+        <div className="flex items-center justify-center min-h-screen pt-safe bg-white px-4">
             <div className="text-center">
                 <img src="/icons/icon-512.png" alt="DSL Shield" className="w-20 h-20 mx-auto mb-8" />
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">Dodge Sports League</h1>

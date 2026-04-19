@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { Routes, Route, Navigate, Link } from "react-router-dom"
 import Login from "./pages/Login"
 import ProtectedRoute from "./components/ProtectedRoute"
@@ -27,6 +28,17 @@ import LeagueLayout from "./components/LeagueLayout"
 
 export default function App() {
   const { currentUser } = useAuth();
+
+  useEffect(() => {
+    const setViewportHeight = () => {
+      document.documentElement.style.setProperty("--vh", `${window.innerHeight * 0.01}px`);
+    };
+
+    setViewportHeight();
+    window.addEventListener("resize", setViewportHeight);
+    return () => window.removeEventListener("resize", setViewportHeight);
+  }, []);
+
   const handleclick = async () => {
     const token = await currentUser.getIdToken();
     const result = await apiGet("/health", token);
