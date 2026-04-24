@@ -15,6 +15,7 @@ import {
     deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 // ─── Canvas Dimensions ───────────────────────────────────────────────────────
 let CANVAS_WIDTH = 900;
@@ -78,6 +79,7 @@ export default function PlayBoard() {
     const [saveStatus, setSaveStatus] = useState(""); // feedback message
     const [saveLoading, setSaveLoading] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [confirmDeletePlay, setConfirmDeletePlay] = useState({ open: false, playId: null, playName: "" });
 
     // ── Initial positions for reset ──
     const [initialPositions, setInitialPositions] = useState({});
@@ -265,11 +267,22 @@ export default function PlayBoard() {
         if (!leagueId) return;
         try {
             const snap = await getDocs(collection(db, "leagues", leagueId, "plays"));
-            setSavedPlays(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+            const allPlays = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+            
+            // Filter plays by team: show all plays if user is commissioner, otherwise only show user's team plays
+            const isCommissioner = currentUser?.uid === (await getDoc(doc(db, "leagues", leagueId))).data()?.commissionerId;
+            if (isCommissioner) {
+                setSavedPlays(allPlays);
+            } else if (myTeamIndex !== null && myTeamIndex !== undefined) {
+                // Filter to only show plays from user's team
+                setSavedPlays(allPlays.filter(play => play.teamIndex === myTeamIndex));
+            } else {
+                setSavedPlays(allPlays);
+            }
         } catch (err) {
             console.error("Failed to load plays:", err);
         }
-    }, [leagueId]);
+    }, [leagueId, myTeamIndex, currentUser]);
 
     useEffect(() => {
         loadSavedPlays();
@@ -355,6 +368,9 @@ export default function PlayBoard() {
         }
         setSaveLoading(true);
         try {
+            // Determine the teamIndex for the play based on current player's team
+            const playTeamIndex = myTeamIndex !== null && myTeamIndex !== undefined ? myTeamIndex : -1;
+            
             await addDoc(collection(db, "leagues", leagueId, "plays"), {
                 name: playName.trim(),
                 players: players.map(({ uid, x, y, teamIndex }) => ({ uid, x, y, teamIndex })),
@@ -363,6 +379,7 @@ export default function PlayBoard() {
                 canvasHeight,
                 createdBy: currentUser.uid,
                 createdByName: userProfile?.displayName || "Unknown",
+                teamIndex: playTeamIndex, // Track which team created this play
                 createdAt: serverTimestamp(),
             });
             const savedName = playName.trim();
@@ -379,17 +396,19 @@ export default function PlayBoard() {
     };
 
     // ─── Load a saved play ────────────────────────────────────────────────────
-    const handleDeletePlay = async (playId) => {
-        if (!window.confirm("Delete this play?")) return;
+    const handleDeletePlay = async () => {
+        if (!confirmDeletePlay.playId) return;
         try {
-            await deleteDoc(doc(db, "leagues", leagueId, "plays", playId));
-            setSavedPlays((prev) => prev.filter((play) => play.id !== playId));
+            await deleteDoc(doc(db, "leagues", leagueId, "plays", confirmDeletePlay.playId));
+            setSavedPlays((prev) => prev.filter((play) => play.id !== confirmDeletePlay.playId));
             setSaveStatus("Play deleted.");
             setTimeout(() => setSaveStatus(""), 3000);
         } catch (err) {
             console.error("Delete failed:", err);
             setSaveStatus("Could not delete play.");
             setTimeout(() => setSaveStatus(""), 3000);
+        } finally {
+            setConfirmDeletePlay({ open: false, playId: null, playName: "" });
         }
     };
 
@@ -645,18 +664,25 @@ export default function PlayBoard() {
                         {savedPlays.map((play) => (
                             <button
                                 key={`delete_${play.id}`}
-                                onClick={() => handleDeletePlay(play.id)}
+                                onClick={() => setConfirmDeletePlay({ open: true, playId: play.id, playName: play.name })}
                                 style={{
-                                    padding: "4px 10px",
-                                    background: "#c0392b",
+                                    padding: "6px 12px",
+                                    background: "#dc2626",
                                     color: "#fff",
-                                    border: "1px solid #922b21",
-                                    borderRadius: "4px",
+                                    border: "none",
+                                    borderRadius: "6px",
                                     cursor: "pointer",
-                                    fontSize: "13px",
+                                    fontSize: "12px",
+                                    fontWeight: "500",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    transition: "background 0.2s",
                                 }}
+                                onMouseOver={(e) => e.target.style.background = "#b91c1c"}
+                                onMouseOut={(e) => e.target.style.background = "#dc2626"}
                             >
-                                Delete {play.name}
+                                <span>🗑</span> Delete
                             </button>
                         ))}
                     </div>
@@ -825,6 +851,18 @@ export default function PlayBoard() {
                 ))}
             </div>
             </div>
+
+            {/* Delete Play Confirmation Dialog */}
+            <ConfirmDialog
+                open={confirmDeletePlay.open}
+                title="Delete Play"
+                message={`Are you sure you want to delete "${confirmDeletePlay.playName}"? This action cannot be undone.`}
+                confirmLabel="Delete Play"
+                cancelLabel="Cancel"
+                danger
+                onConfirm={handleDeletePlay}
+                onCancel={() => setConfirmDeletePlay({ open: false, playId: null, playName: "" })}
+            />
         </div>
     );
 }

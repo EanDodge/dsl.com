@@ -123,15 +123,18 @@ export default function CreateLeague() {
                 </div>
 
                 {/* Submit Button */}
-                {allFilled && (
-                    <button
-                        type="button"
-                        onClick={handleSubmit}
-                        className="w-full btn-primary transition-opacity opacity-100 animate-fadeIn"
-                    >
-                        {isEdit ? 'Update League' : 'Create League'}
-                    </button>
-                )}
+                <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={!allFilled}
+                    className={`w-full py-3 px-4 rounded-md font-semibold text-white transition-all duration-150 ${
+                        allFilled
+                            ? 'bg-[#FF6B00] hover:bg-orange-700 cursor-pointer'
+                            : 'bg-gray-300 cursor-not-allowed'
+                    }`}
+                >
+                    {isEdit ? 'Update League' : 'Create League'}
+                </button>
             </form>
         </div>
     )
