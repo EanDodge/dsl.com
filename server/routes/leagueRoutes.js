@@ -48,7 +48,6 @@ router.post("/", verifyToken, async (req, res) => {
     }
 
 });
-
 router.post("/join", verifyToken, async (req, res) => {
     try {
         const { inviteCode } = req.body;
@@ -88,5 +87,45 @@ router.post("/join", verifyToken, async (req, res) => {
     }
 });
 
+
+router.put("/:leagueId", verifyToken, async (req, res) => {
+    try {
+        const { leagueId } = req.params;
+        const { name, sport, location } = req.body;
+        const uid = req.user.uid;
+        const leagueDoc = await db.collection("leagues").doc(leagueId).get();
+        if (!leagueDoc.exists) return res.status(404).json({ error: "League not found" });
+        if (leagueDoc.data().commissionerId !== uid) return res.status(403).json({ error: "Only commissioner can edit" });
+        await db.collection("leagues").doc(leagueId).update({
+            name,
+            sport,
+            location
+        });
+        res.json({ message: "League updated" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Failed to update league" });
+    }
+});
+
+
+router.put("/:leagueId/games/:gameId", verifyToken, async (req, res) => {
+    try {
+        const { leagueId, gameId } = req.params;
+        const uid = req.user.uid;
+        const leagueDoc = await db.collection("leagues").doc(leagueId).get();
+        if (!leagueDoc.exists) return res.status(404).json({ error: "League not found" });
+        if (leagueDoc.data().commissionerId !== uid) return res.status(403).json({ error: "Only commissioner can edit" });
+        
+        const gameDoc = await db.collection("leagues").doc(leagueId).collection("games").doc(gameId).get();
+        if (!gameDoc.exists) return res.status(404).json({ error: "Game not found" });
+        
+        await db.collection("leagues").doc(leagueId).collection("games").doc(gameId).update(req.body);
+        res.json({ message: "Game updated" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Failed to update game" });
+    }
+});
 
 export default router;
