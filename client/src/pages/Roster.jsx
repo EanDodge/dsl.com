@@ -70,47 +70,42 @@ export default function Roster() {
       <h1 className="text-4xl font-bold text-gray-900 mb-4">League Roster</h1>
       <div className="space-y-3">
         {players.map(player => (
-          isCommissioner ? (
-            <Link
-              key={player.id}
-              to={`/profile?user=${player.id}`}
-              className="block"
-            >
-              <div className="flex items-center justify-between p-4 border rounded hover:bg-gray-50">
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">{player.displayName}</div>
-                  <div className="text-xs text-gray-500">Overall: {player.overall ?? '—'}</div>
-                </div>
-
-                <div
-                  className="relative"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                >
-                  <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(menuOpen === player.id ? null : player.id); }}
-                    onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                    className="p-2 hover:bg-gray-100 rounded text-lg"
-                    aria-label={`Open menu for ${player.displayName}`}
-                  >
-                    ⋮
-                  </button>
-                  {menuOpen === player.id && (
-                    <div className="absolute right-0 mt-1 min-w-[150px] bg-white border rounded shadow z-10">
-                      <button onClick={async () => { setConfirmKick({ open: true, playerId: player.id, playerName: player.displayName }); setMenuOpen(null); }} className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left text-red-600">Remove from League</button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Link>
-          ) : (
-            <div key={player.id} className="flex items-center justify-between p-4 border rounded">
+          <Link
+            key={player.id}
+            to={`/profile?user=${player.id}`}
+            className="block"
+          >
+            <div className="flex items-center justify-between p-4 border rounded hover:bg-gray-50">
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-900">{player.displayName}</div>
                 <div className="text-xs text-gray-500">Overall: {player.overall ?? '—'}</div>
               </div>
+
+              <div
+                className="relative"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              >
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(menuOpen === player.id ? null : player.id); }}
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  className="p-2 hover:bg-gray-100 rounded text-lg"
+                  aria-label={`Open menu for ${player.displayName}`}
+                >
+                  ⋮
+                </button>
+                {menuOpen === player.id && (
+                  <div className="absolute right-0 mt-1 min-w-[200px] bg-white border rounded shadow z-10">
+                    {isCommissioner ? (
+                      <button onClick={async () => { setConfirmKick({ open: true, playerId: player.id, playerName: player.displayName }); setMenuOpen(null); }} className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left text-red-600">Remove from League</button>
+                    ) : (
+                      <div className="px-4 py-2 text-sm text-gray-500">Only the commissioner can remove players</div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          )
+          </Link>
         ))}
       </div>
       <ConfirmDialog

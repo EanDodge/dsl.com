@@ -34,6 +34,7 @@ export default function BottomNav() {
     { path: `/league/${leagueId}`, label: "Dashboard", icon: "🏠" },
     { path: `/league/${leagueId}/chat`, label: "Chat", icon: "💬" },
     { path: `/league/${leagueId}/profile`, label: "Profile", icon: "👤" },
+    { path: `/league/${leagueId}/roster`, label: "Roster", icon: "👥" },
   ];
 
   if (isCommissioner) {
