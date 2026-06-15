@@ -489,7 +489,7 @@ export default function PlayBoard() {
 
     // ─── Render ───────────────────────────────────────────────────────────────
     return (
-        <div style={{ fontFamily: "sans-serif", backgroundColor: "#1a1a2e", minHeight: "100vh", color: "#eee", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ fontFamily: "sans-serif", backgroundColor: "#1a1a2e", minHeight: "100vh", color: "#eee", display: "flex", flexDirection: "column" }}>
             {/* Header with Back Button */}
             <div style={{ paddingTop: "60px", paddingLeft: "12px", paddingRight: "12px", paddingBottom: "8px", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
                 <button

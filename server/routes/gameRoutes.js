@@ -145,9 +145,19 @@ router.post("/:leagueId/games/:gameId/stats", verifyToken, async (req, res) => {
             const contribution = calculateOverall(stats, attended, statWeights);
             const newOverall = Math.min(99, Math.max(40, currentOverall + contribution));
 
+            // update overall and record the last game contribution for traceability
             await db.collection("leagues").doc(leagueId)
                 .collection("players").doc(uid)
-                .update({ overall: newOverall });
+                .update({
+                    overall: newOverall,
+                    lastGameChange: {
+                        previousOverall: currentOverall,
+                        contribution,
+                        newOverall,
+                        gameId,
+                        timestamp: admin.firestore.FieldValue.serverTimestamp()
+                    }
+                });
         }));
 
 

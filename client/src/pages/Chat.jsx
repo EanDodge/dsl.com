@@ -55,10 +55,10 @@ export default function Chat() {
     }
 
     return (
-        <div className="flex flex-col safe-vh overflow-hidden pt-safe">
+        <div className="flex flex-col safe-vh pt-safe">
             {/* Messages area */}
             <div
-                className="flex-1 overflow-y-auto px-4 py-4 pb-28"
+                className="flex-1 overflow-y-auto min-h-0 px-4 py-4 pb-28"
                 style={{ touchAction: 'pan-y', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', paddingBottom: 'calc(7rem + env(safe-area-inset-bottom))' }}
             >
                 <div className="max-w-4xl mx-auto space-y-4">

@@ -20,6 +20,7 @@ import GamePage from "./pages/GamePage"
 import GameRoster from "./pages/GameRoster"
 import LeagueProfile from "./pages/LeagueProfile"
 import LeagueSettings from "./pages/LeagueSettings"
+import Roster from "./pages/Roster"
 import { useAuth } from "./context/AuthContext"
 import { apiGet, apiPost } from "./api"
 import Chat from "./pages/Chat"
@@ -121,6 +122,7 @@ export default function App() {
             <LeagueLayout>
               <Routes>
                 <Route path="" element={<LeagueDashboard />} />
+                <Route path="roster" element={<Roster />} />
                 <Route path="games/create" element={<CreateGame />} />
                 <Route path="games/:gameId" element={<GamePage />} />
                 <Route path="profile" element={<LeagueProfile />} />

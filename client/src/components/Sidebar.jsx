@@ -41,6 +41,7 @@ export default function Sidebar() {
     { path: `/league/${leagueId}`, label: "Dashboard", icon: "🏠" },
     { path: `/league/${leagueId}/chat`, label: "Chat", icon: "💬" },
     { path: `/league/${leagueId}/profile`, label: "My Profile", icon: "👤" },
+    { path: `/league/${leagueId}/roster`, label: "Roster", icon: "👥" },
   ];
 
   if (isCommissioner) {

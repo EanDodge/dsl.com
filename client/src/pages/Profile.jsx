@@ -3,36 +3,42 @@ import { auth, db } from "../firebase"
 import { useAuth } from "../context/AuthContext"
 import { useEffect, useState } from "react"
 import { signOut } from "firebase/auth"
+import { useLocation } from "react-router-dom";
 
 
 export default function Profile(){
     const {currentUser} = useAuth();
+    const location = useLocation();
     const [profileData,setProfileData] = useState(null);
     const [formData,setFormData] = useState({});
     const [saving, setSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState("");
+
+    // allow viewing other users via ?user=UID — if absent, show current user's profile
+    const params = new URLSearchParams(location.search);
+    const viewedUserId = params.get('user') || currentUser?.uid;
+    const isOwner = viewedUserId === currentUser?.uid;
+
     useEffect(() =>{
         const fetchProfile = async () =>{
-            const userSnap = await getDoc(doc(db, "users",currentUser.uid));
+            const userSnap = await getDoc(doc(db, "users", viewedUserId));
             if(userSnap.exists()){
-
                 setProfileData(userSnap.data());
                 setFormData(userSnap.data());
             }
             else{
-                    // nav("/not-found");
                     return;
                 }
         }
-        fetchProfile();
-    }, []);
+        if (viewedUserId) fetchProfile();
+    }, [viewedUserId]);
     const isDirty = JSON.stringify(formData) !== JSON.stringify(profileData);
 
     const handleChange = (e) => {
         setFormData({...formData, [e.target.name]: e.target.value})
     }
     const handleSave = async() => {
-        if (saving) return;
+        if (!isOwner || saving) return;
         setSaving(true);
         try {
             const {displayName,bio} = formData;
@@ -70,19 +76,20 @@ export default function Profile(){
 
     return(
         <div className="pt-20 pb-8 px-4 md:px-8 max-w-2xl mx-auto">
-            <h1 className="text-4xl font-bold text-gray-900 mb-8">Profile Settings</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-8">{isOwner ? 'Profile Settings' : 'Profile'}</h1>
 
             <form className="space-y-8">
                 {/* Display Name */}
                 <div>
                     <label className="block text-sm font-medium text-gray-900 mb-2">Display Name</label>
                     <input
-                        type="text"
-                        name="displayName"
-                        value={formData.displayName}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
-                    />
+                            type="text"
+                            name="displayName"
+                            value={formData.displayName}
+                            onChange={handleChange}
+                            readOnly={!isOwner}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900" style={{ "--tw-ring-color": "#FF6B00" }}
+                        />
                 </div>
 
                 {/* Email */}
@@ -98,6 +105,7 @@ export default function Profile(){
                         name="bio"
                         value={formData.bio || ""}
                         onChange={handleChange}
+                        readOnly={!isOwner}
                         rows="4"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 text-gray-900 resize-none" style={{ "--tw-ring-color": "#FF6B00" }}
                     />
@@ -115,7 +123,7 @@ export default function Profile(){
                         {saveStatus}
                     </p>
                 )}
-                {isDirty && (
+                {isOwner && isDirty && (
                     <button
                         type="button"
                         onClick={handleSave}
@@ -128,7 +136,9 @@ export default function Profile(){
             </form>
 
             <div className="border-t pt-8">
-                <button onClick={handleDeleteAccount} className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete Account</button>
+                {isOwner && (
+                    <button onClick={handleDeleteAccount} className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete Account</button>
+                )}
             </div>
         </div>
     )
